@@ -2,6 +2,7 @@ package line;
 
 import geometry.Vertex3D;
 import windowing.drawable.Drawable;
+import windowing.graphics.Color;
 
 public class DDALineRenderer implements LineRenderer {	
 	// use the static factory make() instead of constructor.
@@ -17,36 +18,41 @@ public class DDALineRenderer implements LineRenderer {
 	public void drawLine(Vertex3D p1, Vertex3D p2, Drawable drawable) {
 		double deltaX = p2.getX() - p1.getX();
 		double deltaY = p2.getY() - p1.getY();
-		double deltaZ = p2.getZ() - p1.getZ();
 		
 		double slope = deltaY / deltaX;
 		
-		double y = p1.getY();
-		double z = p1.getZ();
+		double z1 = 1 / p1.getZ();
+		double z2 = 1 / p2.getZ();
+		double deltaZ = z2 - z1;
 		
-		double r = p1.getColor().getIntR();
-		double g = p1.getColor().getIntG();
-		double b = p1.getColor().getIntB();
+		double r = p1.getColor().getR();
+		double g = p1.getColor().getG();
+		double b = p1.getColor().getB();
+
 		
-		double deltaR = p2.getColor().getIntR() - p1.getColor().getIntR();
-		double deltaG = p2.getColor().getIntG() - p1.getColor().getIntG();
-		double deltaB = p2.getColor().getIntB() - p1.getColor().getIntB();
+		
+		double deltaR = p2.getColor().getR() - r;
+		double deltaG = p2.getColor().getG() - g;
+		double deltaB = p2.getColor().getB() - b;
 		
 		double slopeR = deltaR / deltaX;
 		double slopeG = deltaG / deltaX;
 		double slopeB = deltaB / deltaX;
 		double slopeZ = deltaZ / deltaX;
 		
-		int color;
+		double y = p1.getY();
+		double z = z1;
+		
+		Color color;
 		
 		for (int x = p1.getIntX(); x <= p2.getIntX(); x++) {
-			color = ((0xff << 24) + (((int) Math.round(r) & 0xff) << 16) + (((int) Math.round(g) & 0xff) << 8) + ((int) Math.round(b) & 0xff)); 
-			drawable.setPixel(x, (int) Math.round(y), z, color);
+			color = new Color(r, g, b);
+			drawable.setPixel(x, (int) Math.round(y), z, color.asARGB());
 			y = y + slope;
+			z = (z + slopeZ) / z;
 			r = r + slopeR;
 			g = g + slopeG;
 			b = b + slopeB;
-			z = z + slopeZ;
 		}
 	}
 
