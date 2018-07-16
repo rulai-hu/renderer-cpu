@@ -24,22 +24,6 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 
 		draw(shader.shade(polygon), drawable);
 	}
-	
-	private ArrayList<Polygon> triangulate(Polygon polygon) {
-		ArrayList<Polygon> result = new ArrayList<Polygon>();
-		
-		for (int i = 2; i < polygon.numVertices; i++) {
-			Polygon tri = Polygon.make(
-				polygon.get(0),
-				polygon.get(i - 1),
-				polygon.get(i)
-			);
-
-			result.add(tri);
-		}
-		
-		return result;
-	}
 
 	private void draw(Polygon polygon, Drawable drawable) {
 		Chain left = polygon.leftChain();
@@ -168,6 +152,22 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 	
 	public static PolygonRenderer make() {
 		return new FilledPolygonRenderer();
+	}
+	
+	private ArrayList<Polygon> triangulate(Polygon polygon) {
+		ArrayList<Polygon> result = new ArrayList<Polygon>();
+		
+		for (int i = 2; i < polygon.numVertices; i++) {
+			Polygon tri = Polygon.make(
+				polygon.get(0),
+				polygon.get(i - 1),
+				polygon.get(i)
+			);
+
+			result.add(tri);
+		}
+		
+		return result;
 	}
 	
 	private FilledPolygonRenderer() {}

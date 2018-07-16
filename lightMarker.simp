@@ -1,0 +1,8 @@
+# Note: this file messes with the ambient light.
+# You must reset your ambient light afterwards.
+{
+		ambient 1 1 1
+		rotate Y 45
+		rotate X 45
+		file "cube"
+}

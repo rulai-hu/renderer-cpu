@@ -14,7 +14,7 @@ public class WireframePolygonRenderer implements PolygonRenderer {
 	public void drawPolygon(Polygon polygon, Drawable drawable, FaceShader shader) {
 		LineRenderer renderer = DDALineRenderer.make();
 		
-		polygon = shader.shade(polygon);
+		//polygon = shader.shade(polygon);
 		
 		for (int i = 0; i < polygon.numVertices; i++) {
 

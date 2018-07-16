@@ -38,7 +38,6 @@ public class SimpInterpreter {
 	private Stack<LineBasedReader> readerStack;
 	
 	private Color defaultColor = Color.WHITE;
-	private Color ambientLight = Color.BLACK;
 	private Drawable _canvas; // save the original canvas so we can go back to it
 	private Drawable canvas;
 	
@@ -50,7 +49,6 @@ public class SimpInterpreter {
 	private Clipper clipper;
 	
 	private Shaders shaders;
-	private Shader shader;
 
 	private boolean cameraLoaded = false;
 	private boolean cullBackfaces = true;
@@ -69,7 +67,6 @@ public class SimpInterpreter {
 		this.wireframeRenderer = renderers.getWireframeRenderer();
 		this.polygonRenderer = filledRenderer;
 		this.shaders = new Shaders();
-		this.shader = new AmbientShader(ambientLight);
 
 		reader = new LineBasedReader(filename);
 		readerStack = new Stack<>();
@@ -121,7 +118,7 @@ public class SimpInterpreter {
 		case "flat" :		flatShading(); 				break;
 		
 		default :
-			System.err.println("bad input line: " + tokens);
+			//System.err.println("bad input line: " + tokens);
 			break;
 		}
 	}
@@ -182,7 +179,7 @@ public class SimpInterpreter {
 		Polygon viewPolygon = CTM.apply(polygon);
 		
 		if (cullBackfaces) {
-			double[] normal = computeNormal(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
+			double[] normal = cross(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
 			
 			double[] eye = { -viewPolygon.get(0).getX(), -viewPolygon.get(0).getY(), -viewPolygon.get(0).getZ() };
 			double dot = (normal[0] * eye[0] + normal[1] * eye[1] + normal[2] * eye[2]);
@@ -205,7 +202,7 @@ public class SimpInterpreter {
 		
 		viewPolygon = transformToCamera(viewPolygon);
 		
-		polygonRenderer.drawPolygon(viewPolygon, canvas, (FaceShader) shader);
+		polygonRenderer.drawPolygon(viewPolygon, canvas, shaders.getAmbientShader());
 	}
 	
 	private void interpretCamera(String[] tokens) {
@@ -250,7 +247,7 @@ public class SimpInterpreter {
 	}
 
 	private void flatShading() {
-		this.shader = shaders.getFlatShader();
+		//this.shader = shaders.getFlatShader();
 	}
 	
 	private void applyToTransformStack(Transformation T) {
@@ -261,11 +258,13 @@ public class SimpInterpreter {
 	}
 
 	private void interpretAmbient(String[] tokens) {
-		ambientLight = new Color(
+		Color ambientLight = new Color(
 			cleanNumber(tokens[1]),
 			cleanNumber(tokens[2]),
 			cleanNumber(tokens[3])
 		);
+		
+		shaders.setAmbientLight(ambientLight);
 	}
 
 	private void push() {
@@ -454,7 +453,7 @@ public class SimpInterpreter {
 		polygon(Polygon.make(p1, p2, p3));
 	}
 
-	private double[] computeNormal(Vertex3D v1, Vertex3D v2, Vertex3D v3) {
+	private double[] cross(Vertex3D v1, Vertex3D v2, Vertex3D v3) {
 		double x1 = v1.getX();
 		double y1 = v1.getY();
 		double z1 = v1.getZ();
