@@ -1,0 +1,28 @@
+{
+	{
+		translate 0 25 -32
+		camera  -1 -1 1 1 -0.1 -200
+		depth 0 -200 (0 0 0)
+		{
+			translate 8 10 -40
+			light 1, 1, 1, 1, 0
+#			file "lightMarker"
+		}
+		ambient .05 .05 .05
+	}
+	{
+		translate -225 10 0
+		light .5, .5, 1, 1, 0
+	}
+	
+	flat
+
+	{
+		translate 0 0 -80
+		rotate Y -46
+		
+		surface .8, .4, .2, .9, 16
+		obj "bowling"
+	}
+	
+}

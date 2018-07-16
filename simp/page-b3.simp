@@ -1,0 +1,19 @@
+{
+	{
+		camera  -1 -1 1 1 -0.1 -200
+	}
+
+	phong
+	{
+		translate 10 -15 -10
+		rotate Y 25	
+		{
+			translate -5 5 -40
+			light 1, 1, 1, 1, 0
+			file "lightMarker"	
+		}
+		ambient 0 0 0 
+		surface 0 1 0 .8 64
+		file "cubeline"
+	}
+}

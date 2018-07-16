@@ -1,0 +1,27 @@
+{
+	{
+		translate 0 25 -32
+		rotate Y -55
+		rotate X -20
+		camera  -1 -1 1 1 -0.1 -200
+		depth 0 -220 (0 0 0)	
+		{
+			translate -100, 100, 0
+			light 1, 1, .5, 1, 0
+		}
+		{
+			translate 100, 200, 0
+    		light 1, 0.5, 0.5, 1, 0
+		}
+	}
+	{
+		translate 80 15 -70
+		light 8, 8, 12, 1, .2
+	}
+	ambient 0 0 0 
+	phong
+	{
+		translate 0 0 -20
+		file "stripeGrid"
+	}
+}

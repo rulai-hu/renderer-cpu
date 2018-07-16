@@ -1,0 +1,17 @@
+{
+	{
+		camera  -1 -1 1 1 -0.1 -200
+	}
+	{
+		translate 0 2 -30
+		light 1, 1, 1, 1, 0
+		file "lightMarker"	
+	}
+	ambient 0 0 0 
+	phong
+	{
+		translate 10 -15 -30
+		rotate Y 25
+		file "cubeline"
+	}
+}
