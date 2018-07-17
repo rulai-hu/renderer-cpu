@@ -138,10 +138,10 @@ public class SimpInterpreter {
 	}
 
 	private void interpretDepth(String[] tokens) {
+		System.out.println("depth!");
 		double near = cleanNumber(tokens[1]);
 		double far = cleanNumber(tokens[2]);
 		Color color = interpretColor(tokens, 3);
-		this.canvas.clear();
 		this.canvas = new DepthCueingDrawable(_canvas, near, far, color);
 	}
 	
@@ -194,7 +194,6 @@ public class SimpInterpreter {
 			double dot = (normal[0] * eye[0] + normal[1] * eye[1] + normal[2] * eye[2]);
 	
 			if (dot < 0) {
-				System.out.println("culling");
 				return;
 			}
 		}
