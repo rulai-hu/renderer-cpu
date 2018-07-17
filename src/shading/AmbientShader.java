@@ -12,7 +12,6 @@ public class AmbientShader implements FaceShader {
 
 	@Override
 	public Polygon shade(Polygon polygon) {
-		System.out.println("Shade called " + ambientLight);
 		Polygon result = Polygon.makeEmpty();
 		
 		for (int i = 0; i < polygon.length(); i++) {

@@ -4,8 +4,8 @@ import geometry.Vertex3D;
 import polygon.Polygon;
 import windowing.graphics.Color;
 
-public interface PixelShader extends Shader {
-
-	Color shade(Polygon polygon, Vertex3D current);
-
+public interface PixelShader {
+	public Color shade(Vertex3D current);
+	public void setBaryocentricCoords(double w1, double w2, double w3);
+	public void setPolygon(Polygon polygon);
 }

@@ -3,6 +3,7 @@ package polygon;
 import java.util.ArrayList;
 import java.util.List;
 
+import geometry.Point3DH;
 import geometry.Vertex;
 import geometry.Vertex3D;
 
@@ -146,5 +147,36 @@ public class Polygon extends Chain {
 
 	public boolean isClockwise() {
 		return Polygon.isClockwise(get(0), get(1), get(2));
+	}
+	
+	public boolean hasAveragedVertexNormal() {
+		for (int i = 0; i < numVertices; i++) {
+			if (get(i).hasNormal() == false) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	public Point3DH getAveragedVertexNormal() {
+		double[] normal = { 0, 0, 0 };
+		for (int i = 0; i < numVertices; i++) {
+			normal[0] += get(i).getNormal().getX();
+			normal[1] += get(i).getNormal().getY();
+			normal[2] += get(i).getNormal().getZ();
+		}
+
+		normal[0] /= numVertices;
+		normal[1] /= numVertices;
+		normal[2] /= numVertices;
+		Vertex3D.normalize(normal);
+		
+		return new Point3DH(normal[0], normal[1], normal[2], 0);
+	}
+
+	public Point3DH getFaceNormal() {
+		double[] normal = Vertex3D.normalize(Vertex3D.cross(get(0), get(1), get(2)));
+		return new Point3DH(normal[0], normal[1], normal[2], 0);
 	}
 }

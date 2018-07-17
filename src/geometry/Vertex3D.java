@@ -4,6 +4,7 @@ import windowing.graphics.Color;
 
 public class Vertex3D implements Vertex {
 	protected Point3DH point;
+	private Point3DH normal;
 	protected Color color;
 	
 	public Vertex3D(Point3DH point, Color color) {
@@ -82,5 +83,46 @@ public class Vertex3D implements Vertex {
 	public String toIntString() {
 		return "(" + getIntX() + ", " + getIntY() + getIntZ() + ", " + ", " + getColor().toIntString() + ")";
 	}
+	
+	public static double[] cross(Vertex3D v1, Vertex3D v2, Vertex3D v3) {
+		double x1 = v1.getX();
+		double y1 = v1.getY();
+		double z1 = v1.getZ();
+		
+		double x2 = v2.getX();
+		double y2 = v2.getY();
+		double z2 = v2.getZ();
+		
+		double x3 = v3.getX();
+		double y3 = v3.getY();
+		double z3 = v3.getZ();
 
+		return new double[] {
+			(y2 - y1) * (z3 - z1) - (y3 - y1) * (z2 - z1),
+			(z2 - z1) * (x3 - x1) - (z3 - z1) * (x2 - x1),
+			(x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)
+		};
+	}
+	
+	public void setNormal(Point3DH p) {
+		normal = p;
+	}
+	
+	public Point3DH getNormal() {
+		return normal;
+	}
+	
+	public boolean hasNormal() {
+		return normal != null;
+	}
+	public static double[] normalize(double[] v) {
+		double norm = Math.sqrt((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]));
+		if (norm == 0) {
+			System.err.println("norm = 0");
+		}
+		v[0] /= norm;
+		v[1] /= norm;
+		v[2] /= norm;
+		return v;
+	}
 }

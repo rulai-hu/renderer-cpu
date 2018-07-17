@@ -41,7 +41,7 @@ public class Clipper {
 		}
 		
 		result = clip(result, normals[0], -1, true);
-        result = clip(result, normals[1], -1, true);
+		result = clip(result, normals[1], -1, true);
 		result = clip(result, normals[2], -1, true);
 		result = clip(result, normals[3], -1, true);
 

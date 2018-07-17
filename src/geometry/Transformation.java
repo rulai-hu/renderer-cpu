@@ -90,17 +90,18 @@ public class Transformation {
 	
 	public Vertex3D apply(Vertex3D vertex) {
 		Point3DH p = apply(vertex.getPoint3D());
-		return vertex.replacePoint(p);
+		Vertex3D result = vertex.replacePoint(p);
+		if (vertex.hasNormal()) {
+			result.setNormal(apply(vertex.getNormal()));
+		}
+		return result;
 	}
 	
 	public Polygon apply(Polygon polygon) {
 		Polygon result = Polygon.makeEmpty();
 		
 		for (int i = 0; i < polygon.length(); i++) {
-			Point3DH p = apply(polygon.get(i).getPoint3D());
-			//System.out.println("Mapping point " + polygon.get(i).getPoint3D());
-			//System.out.println("Mapped to: " + p);
-			result.add(polygon.get(i).replacePoint(p));
+			result.add(apply(polygon.get(i)));
 		}
 
 		return result;

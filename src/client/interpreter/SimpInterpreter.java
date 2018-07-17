@@ -11,10 +11,7 @@ import geometry.Transformation;
 import polygon.Clipper;
 import polygon.Polygon;
 import polygon.PolygonRenderer;
-import shading.Shaders;
-import shading.AmbientShader;
-import shading.FaceShader;
-import shading.Shader;
+import shading.ShadingStrategy;
 import windowing.drawable.DepthCueingDrawable;
 import windowing.drawable.Drawable;
 import windowing.drawable.ZCullingDrawable;
@@ -32,7 +29,7 @@ public class SimpInterpreter {
 	private Transformation worldToCamera;
 	private Transformation cameraToScreen;
 	
-	private Transformation canonicalView;
+	private Transformation normalize;
 	
 	private LineBasedReader reader;
 	private Stack<LineBasedReader> readerStack;
@@ -48,7 +45,7 @@ public class SimpInterpreter {
 	
 	private Clipper clipper;
 	
-	private Shaders shaders;
+	private ShadingStrategy shading;
 
 	private boolean cameraLoaded = false;
 	private boolean cullBackfaces = true;
@@ -59,19 +56,18 @@ public class SimpInterpreter {
 	}
 	
 	public SimpInterpreter(String filename, Drawable drawable, RendererTrio renderers) {
-		this._canvas = drawable;
+		this._canvas = new ZCullingDrawable(drawable);
 		this.canvas = _canvas;
 		this.clipper = new Clipper();
 		this.lineRenderer = renderers.getLineRenderer();
 		this.filledRenderer = renderers.getFilledRenderer();
 		this.wireframeRenderer = renderers.getWireframeRenderer();
 		this.polygonRenderer = filledRenderer;
-		this.shaders = new Shaders();
-
-		reader = new LineBasedReader(filename);
-		readerStack = new Stack<>();
-		CTM = Transformation.identity();
-		worldToCamera = Transformation.identity();
+		this.shading = new ShadingStrategy();
+		this.reader = new LineBasedReader(filename);
+		this.readerStack = new Stack<>();
+		this.CTM = Transformation.identity();
+		this.worldToCamera = Transformation.identity();
 	}
 	
 	public void interpret() {
@@ -98,7 +94,7 @@ public class SimpInterpreter {
 	}
 	
 	private void interpretCommand(String[] tokens) {
-		switch(tokens[0]) {
+		switch (tokens[0]) {
 		case "{" :      push();   break;
 		case "}" :      pop();    break;
 		case "wire" :   wire();   break;
@@ -117,10 +113,24 @@ public class SimpInterpreter {
 		case "obj" :			interpretObj(tokens);		break;
 		case "flat" :		flatShading(); 				break;
 		
+		case "light" :		interpretLight(tokens);		break;
+		
 		default :
 			//System.err.println("bad input line: " + tokens);
 			break;
 		}
+	}
+
+	private void interpretLight(String[] tokens) {
+		double r = cleanNumber(tokens[1]);
+		double g = cleanNumber(tokens[2]);
+		double b = cleanNumber(tokens[3]);
+		double A = cleanNumber(tokens[4]);
+		double B = cleanNumber(tokens[5]);
+		
+		Point3DH light = CTM.apply(new Point3DH(0, 0, 0, 1));
+		
+		shading.registerPointLight(light, new Color(r, g, b), A, B);
 	}
 
 	private void interpretSurface(String[] tokens) {
@@ -133,7 +143,6 @@ public class SimpInterpreter {
 		Color color = interpretColor(tokens, 3);
 		this.canvas.clear();
 		this.canvas = new DepthCueingDrawable(_canvas, near, far, color);
-		this.canvas = new ZCullingDrawable(this.canvas);
 	}
 	
 	private void interpretObj(String[] tokens) {
@@ -177,14 +186,15 @@ public class SimpInterpreter {
 	// Takes a polygon in OCS and transforms it to VCS before rendering
 	public void polygon(Polygon polygon) {
 		Polygon viewPolygon = CTM.apply(polygon);
-		
+
 		if (cullBackfaces) {
-			double[] normal = cross(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
+			double[] normal = Vertex3D.cross(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
 			
 			double[] eye = { -viewPolygon.get(0).getX(), -viewPolygon.get(0).getY(), -viewPolygon.get(0).getZ() };
 			double dot = (normal[0] * eye[0] + normal[1] * eye[1] + normal[2] * eye[2]);
 	
 			if (dot < 0) {
+				System.out.println("culling");
 				return;
 			}
 		}
@@ -192,7 +202,7 @@ public class SimpInterpreter {
 		// Clip near and far in view space
 		viewPolygon = clipper.clipZ(viewPolygon);
 		
-		viewPolygon = canonicalView.apply(viewPolygon);
+		viewPolygon = normalize.apply(viewPolygon);
 		
 		viewPolygon = clipper.clip(viewPolygon);
 
@@ -202,7 +212,40 @@ public class SimpInterpreter {
 		
 		viewPolygon = transformToCamera(viewPolygon);
 		
-		polygonRenderer.drawPolygon(viewPolygon, canvas, shaders.getAmbientShader());
+		//drawFaceNormals(viewPolygon);
+		
+		polygonRenderer.drawPolygon(viewPolygon, canvas, shading.getShader());
+	}
+	
+	private void drawFaceNormals(Polygon polygon) {
+		System.out.println("drawing face normal");
+		Point3DH p1 = new Point3DH(0, 0, 0, 0);
+		Point3DH p2;
+		
+		for (int i = 0; i < polygon.length(); i++) {
+			p1.add(polygon.get(i).getPoint3D());
+		}
+		
+		p1 = p1.scale(1 / polygon.length());
+		
+		if (polygon.hasAveragedVertexNormal()) {
+			p2 = polygon.getAveragedVertexNormal();
+		} else {
+			p2 = polygon.getFaceNormal();
+		}
+		
+		p2 = p1.add(p2);
+		
+		lineRenderer.drawLine(new Vertex3D(p1, Color.WHITE), new Vertex3D(p2, Color.WHITE), canvas);
+	}
+	
+	private void line(Vertex3D p1, Vertex3D p2) {
+		p1 = CTM.apply(p1);
+		p2 = CTM.apply(p2);
+		p1 = transformToCamera(p1);
+		p2 = transformToCamera(p2);
+		
+		lineRenderer.drawLine(p1, p2, canvas);
 	}
 	
 	private void interpretCamera(String[] tokens) {
@@ -238,7 +281,7 @@ public class SimpInterpreter {
 		
 		double t1 = (2 * far) / (1 - far);
 		
-		canonicalView = new Transformation(
+		normalize = new Transformation(
 			s1,  0, z1,  0,
 			 0, s2, z2,  0,
 			 0,  0, s3, t1,
@@ -247,7 +290,7 @@ public class SimpInterpreter {
 	}
 
 	private void flatShading() {
-		//this.shader = shaders.getFlatShader();
+		shading.flat();
 	}
 	
 	private void applyToTransformStack(Transformation T) {
@@ -264,7 +307,7 @@ public class SimpInterpreter {
 			cleanNumber(tokens[3])
 		);
 		
-		shaders.setAmbientLight(ambientLight);
+		shading.setAmbientLight(ambientLight);
 	}
 
 	private void push() {
@@ -432,45 +475,24 @@ public class SimpInterpreter {
 		return new Point3DH(x, y, z);
 	}
 	
+	public Point3DH interpretNormal(String[] tokens, int startingIndex) {
+		double x = cleanNumber(tokens[startingIndex]);
+		double y = cleanNumber(tokens[startingIndex + 1]);
+		double z = cleanNumber(tokens[startingIndex + 2]);
+		
+		return new Point3DH(x, y, z, 0);
+	}
+	
 	public Color interpretColor(String[] tokens, int startingIndex) {
 		double r = cleanNumber(tokens[startingIndex]);
 		double g = cleanNumber(tokens[startingIndex + 1]);
 		double b = cleanNumber(tokens[startingIndex + 2]);
-
-		return new Color(r, g, b);
-	}
-
-	private void line(Vertex3D p1, Vertex3D p2) {
-		p1 = CTM.apply(p1);
-		p2 = CTM.apply(p2);
-		p1 = transformToCamera(p1);
-		p2 = transformToCamera(p2);
 		
-		lineRenderer.drawLine(p1, p2, canvas);
+		return new Color(r, g, b);
 	}
 	
 	public void polygon(Vertex3D p1, Vertex3D p2, Vertex3D p3) {
 		polygon(Polygon.make(p1, p2, p3));
-	}
-
-	private double[] cross(Vertex3D v1, Vertex3D v2, Vertex3D v3) {
-		double x1 = v1.getX();
-		double y1 = v1.getY();
-		double z1 = v1.getZ();
-		
-		double x2 = v2.getX();
-		double y2 = v2.getY();
-		double z2 = v2.getZ();
-		
-		double x3 = v3.getX();
-		double y3 = v3.getY();
-		double z3 = v3.getZ();
-
-		return new double[] {
-			(y2 - y1) * (z3 - z1) - (y3 - y1) * (z2 - z1),
-			(z2 - z1) * (x3 - x1) - (z3 - z1) * (x2 - x1),
-			(x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)
-		};
 	}
 
 	private Polygon transformToCamera(Polygon polygon) {

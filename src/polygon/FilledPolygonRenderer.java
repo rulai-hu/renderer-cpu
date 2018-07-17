@@ -3,29 +3,27 @@ package polygon;
 import java.util.ArrayList;
 
 import geometry.Vertex3D;
-import shading.PixelShader;
-import shading.VertexShader;
-import shading.FaceShader;
+import shading.Shaders;
 
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 
 public class FilledPolygonRenderer implements PolygonRenderer {
 	@Override
-	public void drawPolygon(Polygon polygon, Drawable drawable, FaceShader shader) {
+	public void drawPolygon(Polygon polygon, Drawable drawable, Shaders shaders) {
 		if (polygon.numVertices < 3) return;
 		if (polygon.numVertices > 3) {
 			for (Polygon tri : triangulate(polygon)) {
-				draw(shader.shade(tri), drawable);
+				draw(shaders.shadeFace(tri), drawable, shaders);
 			}
 			
 			return;
 		}
 
-		draw(shader.shade(polygon), drawable);
+		draw(shaders.shadeFace(polygon), drawable, shaders);
 	}
 
-	private void draw(Polygon polygon, Drawable drawable) {
+	private void draw(Polygon polygon, Drawable drawable, Shaders shaders) {
 		Chain left = polygon.leftChain();
 		Chain right = polygon.rightChain();
 		
@@ -40,6 +38,8 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 		Vertex3D v1 = longest.get(0);
 		Vertex3D v2 = longest.get(1);
 		Vertex3D v3 = longest.get(2);
+		
+		shaders.setPolygon(Polygon.make(v1, v2, v3));
 		
 		int maxY = v1.getIntY();
 		int minX = v3.getIntX();
@@ -69,21 +69,9 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 		double f6 = v1.getY() - v3.getY();
 		double f7 = v3.getY() - v1.getY();
 		
-		double v1Red = v1.getColor().getR() / v1.getZ();
-		double v2Red = v2.getColor().getR() / v2.getZ();
-		double v3Red = v3.getColor().getR() / v3.getZ();
-		
-		double v1Green = v1.getColor().getG() / v1.getZ();
-		double v2Green = v2.getColor().getG() / v2.getZ();
-		double v3Green = v3.getColor().getG() / v3.getZ();
-		
-		double v1Blue = v1.getColor().getB() / v1.getZ();
-		double v2Blue = v2.getColor().getB() / v2.getZ();
-		double v3Blue = v3.getColor().getB() / v3.getZ();
-		
-		double v1Z = 1 / v1.getZ();
-		double v2Z = 1 / v2.getZ();
-		double v3Z = 1 / v3.getZ();
+		double z1 = 1 / v1.getZ();
+		double z2 = 1 / v2.getZ();
+		double z3 = 1 / v3.getZ();
 		
 		for (int currY = maxY; currY > minY; --currY) {
 			if (currY == midpointY) {
@@ -102,7 +90,6 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 			int leftBound = (int) Math.round(leftX);
 			int rightBound = (int) Math.round(rightX);
 			
-			double r, g, b;
 			double w1, w2, w3, z;
 
 			for (int i = leftBound; i < rightBound; ++i) {
@@ -115,15 +102,13 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 					 (f1 * f5 + f3 * f6);
 				w3 = 1 - w2 - w1;
 				
-				r = w1 * v1Red + w2 * v2Red + w3 * v3Red;
-				g = w1 * v1Green + w2 * v2Green + w3 * v3Green;
-				b = w1 * v1Blue + w2 * v2Blue + w3 * v3Blue;
-				
-				z = 1 / (w1 * v1Z + w2 * v2Z + w3 * v3Z);
-				
-				r *= z; g *= z; b *= z;
+				shaders.getPixelShader().setBaryocentricCoords(w1, w2, w3);
 
-				drawable.setPixel(i, currY, z, new Color(r, g, b).asARGB());
+				z = 1 / (w1 * z1 + w2 * z2 + w3 * z3);
+
+				Color color = shaders.shadePixel(new Vertex3D(i, currY, z, Color.BLACK));
+				
+				drawable.setPixel(i, currY, z, color.asARGB());
 			}
 		}
 	}
@@ -136,18 +121,6 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 		dy = v2.getIntY() - v1.getIntY();
 		
 		return dx / dy;
-	}
-
-	@Override
-	public void drawPolygon(Polygon polygon, Drawable drawable, VertexShader shader) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void drawPolygon(Polygon polygon, Drawable drawable, PixelShader shader) {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	public static PolygonRenderer make() {

@@ -11,7 +11,6 @@ import windowing.graphics.Color;
 
 class ObjReader {
 	private static final char COMMENT_CHAR = '#';
-	//private static final int NOT_SPECIFIED = -1;
 
 	private class ObjVertex {
 		private final int vertexIndex;
@@ -37,9 +36,18 @@ class ObjReader {
 		private Polygon toPolygon() {
 			Polygon result = Polygon.makeEmpty();
 			int vertexIdx;
+			Optional<Integer> normalIdx;
+			Vertex3D vertex;
 			for (int i = 0; i < this.size(); i++) {
 				vertexIdx = this.get(i).getVertexIndex();
-				result.add(objVertices.get(vertexIdx));
+				normalIdx = this.get(i).getNormalIndex();
+				vertex = objVertices.get(vertexIdx);
+				
+				if (normalIdx.isPresent()) {
+					vertex.setNormal(objNormals.get(normalIdx.get()));
+				}
+				
+				result.add(vertex);
 			}
 			
 			return result;
@@ -69,7 +77,7 @@ class ObjReader {
 
 	public void render() {
 		//transformVertices();
-		transformNormals();
+		//transformNormals();
 		
 		for (ObjFace face: objFaces) {
 			simpInterpreter.polygon(face.toPolygon());
@@ -178,7 +186,7 @@ class ObjReader {
 			throw new BadObjFileException("Vertex normal with wrong number of arguments : " + numArgs + ": " + tokens);				
 		}
 	
-		Point3DH normal = simpInterpreter.interpretPoint(tokens, 1);
+		Point3DH normal = simpInterpreter.interpretNormal(tokens, 1);
 		objNormals.add(normal);
 	}
 	

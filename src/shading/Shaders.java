@@ -1,25 +1,36 @@
 package shading;
 
+import geometry.Vertex3D;
+import polygon.Polygon;
 import windowing.graphics.Color;
 
 public class Shaders {
-	FaceShader flatShader;
-	FaceShader ambientShader;
-	Color ambient = Color.BLACK;
+	final private FaceShader faceShader;
+	final private PixelShader pixelShader;
 	
-	public Shaders() {
-		flatShader = new FlatShader();
-		ambientShader = new AmbientShader(ambient);
+	public Shaders(FaceShader face, VertexShader vertex, PixelShader pixel) {
+		this.faceShader = face;
+		this.pixelShader = pixel;
 	}
-	public Shader getFlatShader() {
-		return flatShader;
+
+	public Polygon shadeFace(Polygon polygon) {
+		return faceShader.shade(polygon);
 	}
 	
-	public FaceShader getAmbientShader() {
-		return ambientShader;
+	public Color shadeVertex(Polygon polygon, Vertex3D current) {
+		// TODO Auto-generated method stub
+		return null;
 	}
-	public void setAmbientLight(Color ambientLight) {
-		ambient = ambientLight;
-		this.ambientShader = new AmbientShader(ambientLight);
+	
+	public Color shadePixel(Vertex3D current) {
+		return pixelShader.shade(current);
+	}
+
+	public PixelShader getPixelShader() {
+		return pixelShader;
+	}
+
+	public void setPolygon(Polygon polygon) {
+		this.pixelShader.setPolygon(polygon);
 	}
 }

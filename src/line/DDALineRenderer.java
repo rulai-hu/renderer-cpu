@@ -28,8 +28,6 @@ public class DDALineRenderer implements LineRenderer {
 		double r = p1.getColor().getR();
 		double g = p1.getColor().getG();
 		double b = p1.getColor().getB();
-
-		
 		
 		double deltaR = p2.getColor().getR() - r;
 		double deltaG = p2.getColor().getG() - g;

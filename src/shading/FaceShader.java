@@ -3,6 +3,6 @@ package shading;
 import polygon.Polygon;
 
 @FunctionalInterface
-public interface FaceShader extends Shader {
+public interface FaceShader {
 	public Polygon shade(Polygon polygon);
 }
