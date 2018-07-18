@@ -1,5 +1,6 @@
 package client.interpreter;
 
+import java.util.Random;
 import java.util.Stack;
 
 import client.interpreter.LineBasedReader;
@@ -138,7 +139,6 @@ public class SimpInterpreter {
 	}
 
 	private void interpretDepth(String[] tokens) {
-		System.out.println("depth!");
 		double near = cleanNumber(tokens[1]);
 		double far = cleanNumber(tokens[2]);
 		Color color = interpretColor(tokens, 3);
@@ -201,6 +201,12 @@ public class SimpInterpreter {
 		// Clip near and far in view space
 		viewPolygon = clipper.clipZ(viewPolygon);
 		
+		if (viewPolygon.length() < 3) {
+			return;
+		}
+		
+		drawFaceNormals(viewPolygon);
+		
 		viewPolygon = normalize.apply(viewPolygon);
 		
 		viewPolygon = clipper.clip(viewPolygon);
@@ -211,40 +217,57 @@ public class SimpInterpreter {
 		
 		viewPolygon = transformToCamera(viewPolygon);
 		
-		//drawFaceNormals(viewPolygon);
-		
 		polygonRenderer.drawPolygon(viewPolygon, canvas, shading.getShader());
 	}
 	
 	private void drawFaceNormals(Polygon polygon) {
-		System.out.println("drawing face normal");
-		Point3DH p1 = new Point3DH(0, 0, 0, 0);
+		if (polygon.length() != 3) return;
+		Point3DH p1 = new Point3DH(0, 0, 0, 1);
 		Point3DH p2;
 		
 		for (int i = 0; i < polygon.length(); i++) {
-			p1.add(polygon.get(i).getPoint3D());
+			p1 = p1.add(polygon.get(i).getPoint3D());
 		}
 		
-		p1 = p1.scale(1 / polygon.length());
+		p1 = p1.scale(0.333333);
 		
 		if (polygon.hasAveragedVertexNormal()) {
+			System.out.println("using avg vertex normal");
 			p2 = polygon.getAveragedVertexNormal();
 		} else {
 			p2 = polygon.getFaceNormal();
 		}
+
+		p2 = p1.add(p2.scale(2));
+
+		p1 = normalize.apply(p1);
+		p2 = normalize.apply(p2);
 		
-		p2 = p1.add(p2);
+		double z1 = p1.getW();
+		double z2 = p2.getW();
 		
-		lineRenderer.drawLine(new Vertex3D(p1, Color.WHITE), new Vertex3D(p2, Color.WHITE), canvas);
+		Vertex3D r1 = new Vertex3D(p1.getX() / z1, p1.getY() / z1, -p1.getW(), Color.WHITE);
+		Vertex3D r2 = new Vertex3D(p2.getX() / z2, p2.getY() / z2, -p2.getW(), Color.WHITE);
+		
+		lineRenderer.drawLine(transformToCamera(r1), transformToCamera(r2), canvas);
 	}
 	
-	private void line(Vertex3D p1, Vertex3D p2) {
-		p1 = CTM.apply(p1);
-		p2 = CTM.apply(p2);
-		p1 = transformToCamera(p1);
-		p2 = transformToCamera(p2);
+	private void line(Vertex3D v1, Vertex3D v2) {
+		Point3DH p1 = v1.getPoint3D();
+		Point3DH p2 = v2.getPoint3D();
+		p1 = normalize.apply(CTM.apply(p1));
+		p2 = normalize.apply(CTM.apply(p2));
 		
-		lineRenderer.drawLine(p1, p2, canvas);
+		double w1 = p1.getW();
+		double w2 = p2.getW();
+		
+		p1 = new Point3DH(p1.getX() / w1, p1.getY() / w1, -w1);
+		p2 = new Point3DH(p2.getX() / w2, p2.getY() / w2, -w2);
+		
+		Vertex3D r1 = transformToCamera(new Vertex3D(p1, v1.getColor()));
+		Vertex3D r2 = transformToCamera(new Vertex3D(p2, v2.getColor()));
+		
+		lineRenderer.drawLine(r1, r2, canvas);
 	}
 	
 	private void interpretCamera(String[] tokens) {
@@ -318,7 +341,7 @@ public class SimpInterpreter {
 	}
 	
 	private void wire() {
-		cullBackfaces = false;
+		//cullBackfaces = false;
 		polygonRenderer = wireframeRenderer;
 	}
 	

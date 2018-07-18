@@ -73,9 +73,8 @@ public class Point3DH implements Point {
 	}
 	public Point3DH euclidean() {
 		if(w == 0) {
-			System.out.println(this);
 			w = .00001;
-			//throw new UnsupportedOperationException("attempt to get euclidean equivalent of point at infinity " + this);
+			throw new UnsupportedOperationException("attempt to get euclidean equivalent of point at infinity " + this);
 		}
 		double newX = x / w;
 		double newY = y / w;

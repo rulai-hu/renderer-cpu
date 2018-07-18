@@ -21,8 +21,8 @@ public class DDALineRenderer implements LineRenderer {
 		
 		double slope = deltaY / deltaX;
 		
-		double z1 = 1 / p1.getZ();
-		double z2 = 1 / p2.getZ();
+		double z1 = p1.getZ();
+		double z2 = p2.getZ();
 		double deltaZ = z2 - z1;
 		
 		double r = p1.getColor().getR();
@@ -46,11 +46,14 @@ public class DDALineRenderer implements LineRenderer {
 		for (int x = p1.getIntX(); x <= p2.getIntX(); x++) {
 			color = new Color(r, g, b);
 			drawable.setPixel(x, (int) Math.round(y), z, color.asARGB());
+			
 			y = y + slope;
-			z = (z + slopeZ) / z;
+			
 			r = r + slopeR;
 			g = g + slopeG;
 			b = b + slopeB;
+			
+			z = z + slopeZ;
 		}
 	}
 

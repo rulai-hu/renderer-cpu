@@ -40,7 +40,6 @@ public class ColorInterpolatingPixelShader implements PixelShader {
 		this.w1 = w1;
 		this.w2 = w2;
 		this.w3 = w3;
-		return;
 	}
 
 	@Override
