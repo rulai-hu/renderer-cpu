@@ -13,7 +13,7 @@ public class FlatPixelShader implements PixelShader {
 	}
 
 	@Override
-	public void setBaryocentricCoords(double w1, double w2, double w3) {
+	public void setBarycentricCoords(double w1, double w2, double w3) {
 		return;
 	}
 

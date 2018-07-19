@@ -4,16 +4,7 @@ import geometry.Vertex3D;
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 
-public class DDALineRenderer implements LineRenderer {	
-	// use the static factory make() instead of constructor.
-	private DDALineRenderer() {}
-
-	/*
-	 * (non-Javadoc)
-	 * @see client.LineRenderer#drawLine(client.Vertex2D, client.Vertex2D, windowing.Drawable)
-	 * 
-	 * @pre: p2.x >= p1.x && p2.y >= p1.y
-	 */
+public class DDALineRenderer implements LineRenderer {
 	@Override
 	public void drawLine(Vertex3D p1, Vertex3D p2, Drawable drawable) {
 		double deltaX = p2.getX() - p1.getX();
@@ -60,4 +51,6 @@ public class DDALineRenderer implements LineRenderer {
 	public static LineRenderer make() {
 		return new AnyOctantLineRenderer(new DDALineRenderer());
 	}
+
+	private DDALineRenderer() {}
 }

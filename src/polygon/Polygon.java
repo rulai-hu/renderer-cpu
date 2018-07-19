@@ -3,13 +3,16 @@ package polygon;
 import java.util.ArrayList;
 import java.util.List;
 
-import geometry.Point3DH;
 import geometry.Vertex;
 import geometry.Vertex3D;
+import geometry.Point3DH;
+import geometry.Vector3;
 
 public class Polygon extends Chain {
 	private static final int INDEX_STEP_FOR_CLOCKWISE = -1;
 	private static final int INDEX_STEP_FOR_COUNTERCLOCKWISE = 1;
+	private double shininess;
+	private double specCoefficient;
 	
 	private Polygon(Vertex3D... initialVertices) {
 		super(initialVertices);
@@ -159,24 +162,59 @@ public class Polygon extends Chain {
 		return true;
 	}
 	
-	public Point3DH getAveragedVertexNormal() {
-		double[] normal = { 0, 0, 0 };
+	public Vector3 getAveragedVertexNormal() {
+		//double[] result = { 0, 0, 0 };
+		Vector3 normal = new Vector3(0, 0, 0);
 		for (int i = 0; i < numVertices; i++) {
-			normal[0] += get(i).getNormal().getX();
-			normal[1] += get(i).getNormal().getY();
-			normal[2] += get(i).getNormal().getZ();
+			normal.add(get(i).getNormal());
 		}
-
-		normal[0] /= numVertices;
-		normal[1] /= numVertices;
-		normal[2] /= numVertices;
-		Vertex3D.normalize(normal);
 		
-		return new Point3DH(normal[0], normal[1], normal[2], 0);
+		return normal.divide(numVertices).normalize();
 	}
 
-	public Point3DH getFaceNormal() {
-		double[] normal = Vertex3D.normalize(Vertex3D.cross(get(0), get(1), get(2)));
-		return new Point3DH(normal[0], normal[1], normal[2], 0);
+	public Vector3 getFaceNormal() {
+		return Vector3.cross(get(0), get(1), get(2)).normalize();
+	}
+	
+	public ArrayList<Polygon> triangulate() {
+		ArrayList<Polygon> result = new ArrayList<Polygon>();
+		
+		for (int i = 2; i < numVertices; i++) {
+			Polygon tri = Polygon.make(
+				get(0),
+				get(i - 1),
+				get(i)
+			).setSpecularData(specCoefficient, shininess);
+
+			result.add(tri);
+		}
+		
+		return result;
+	}
+
+	public Point3DH getCentroid() {
+		if (numVertices != 3) {
+			System.err.println("Can't find centroid of polygon");
+		}
+		
+		Point3DH p1 = get(0).getPoint3D();
+		Point3DH p2 = get(1).getPoint3D();
+		Point3DH p3 = get(2).getPoint3D();
+		
+		return p1.add(p2.add(p3)).scale(0.333333);
+	}
+	
+	public double getSpecularCoefficient() {
+		return specCoefficient;
+	}
+	
+	public double getShininess() {
+		return shininess;
+	}
+
+	public Polygon setSpecularData(double ks, double s) {
+		specCoefficient = ks;
+		shininess = s;
+		return this;
 	}
 }

@@ -7,36 +7,41 @@ import polygon.Polygon;
 import windowing.graphics.Color;
 
 public class ShadingStrategy {
-	//FaceShader flatShader;
-	//FaceShader ambientShader;
-	private Shaders currentShader;
-	private Color ambient = Color.BLACK;
-	
-	private class PointLight {
-		final Point3DH pos;
-		final Color color;
-		final double A;
-		final double B;
+	public class LightingData {
+		private Color ambientLight;
+		private ArrayList<PointLight> lights;
+		private LightingData(ArrayList<PointLight> lights, Color ambientLight) {
+			this.lights = lights;
+			this.ambientLight = ambientLight;
+		}
 		
-		public PointLight(Point3DH pos, Color color, double A, double B) {
-			this.pos = pos;
-			this.color = color;
-			this.A = A;
-			this.B = B;
+		public Color getAmbientLight() {
+			return ambientLight;
+		}
+		
+		public ArrayList<PointLight> getPointLights() {
+			return lights;
 		}
 	}
 	
-	private ArrayList<PointLight> pointLights = new ArrayList<PointLight>();
+	//FaceShader flatShader;
+	//FaceShader ambientShader;
+	private Shaders currentShader;
+	private final LightingData globalData;
 	
 	public ShadingStrategy() {
+		this.globalData = new LightingData(new ArrayList<PointLight>(), Color.BLACK);
+		System.out.println("Default: ambient shader");
 		ambientOnly();
+		
+		/*
 		FaceShader ambientShader;
 		FaceShader flatFaceShader;
 		FaceShader nullFaceShader;
 		VertexShader nullVertexShader;
 		VertexShader gouraudShader;
 		PixelShader flatPixelShader;
-		PixelShader colorInterpolatingShader;
+		PixelShader colorInterpolatingShader;*/
 	}
 	
 	public Shaders getShader() {
@@ -44,12 +49,12 @@ public class ShadingStrategy {
 	}
 	
 	public void ambientOnly() {
-		System.out.println("Using ambient shader");
-		currentShader = new Shaders(new AmbientShader(ambient), new NullVertexShader(), new FlatPixelShader());
+		currentShader = new Shaders(new AmbientShader(globalData), new NullVertexShader(), new FlatPixelShader());
 	}
 	
 	public void flat() {
-		currentShader = new Shaders(new FlatFaceShader(), new NullVertexShader(), new FlatPixelShader());
+		currentShader = new Shaders(new FlatFaceShader(globalData), new NullVertexShader(), new FlatPixelShader());
+		System.out.println("Switching to flat shader");
 	}
 	
 	public void gouraud(Polygon polygon) {
@@ -57,11 +62,10 @@ public class ShadingStrategy {
 	}
 	
 	public void setAmbientLight(Color ambientLight) {
-		ambient = ambientLight;
-		ambientOnly();
+		globalData.ambientLight = ambientLight;
 	}
 
 	public void registerPointLight(Point3DH pt, Color color, double A, double B) {
-		this.pointLights.add(new PointLight(pt, color, A, B));
+		globalData.lights.add(new PointLight(pt, color, A, B));
 	}
 }

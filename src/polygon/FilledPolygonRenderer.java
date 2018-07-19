@@ -1,26 +1,32 @@
 package polygon;
 
-import java.util.ArrayList;
-
+import geometry.Transformation;
 import geometry.Vertex3D;
 import shading.Shaders;
-
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 
 public class FilledPolygonRenderer implements PolygonRenderer {
 	@Override
-	public void drawPolygon(Polygon polygon, Drawable drawable, Shaders shaders) {
-		if (polygon.numVertices < 3) return;
-		if (polygon.numVertices > 3) {
-			for (Polygon tri : triangulate(polygon)) {
-				draw(shaders.shadeFace(tri), drawable, shaders);
+	public void drawPolygon(Polygon polygon, Drawable drawable, Shaders shaders,
+			Clipper clipper, Transformation normalize, Transformation cameraToScreen) {
+		
+		if (polygon.length() > 3) {
+			for (Polygon tri : polygon.triangulate()) {
+				drawPolygon(tri, drawable, shaders, clipper, normalize, cameraToScreen);
 			}
 			
 			return;
 		}
+		
+		polygon = shaders.shadeFace(polygon);
+		polygon = normalize.apply(polygon);
+		polygon = clipper.clip(polygon);
 
-		draw(shaders.shadeFace(polygon), drawable, shaders);
+		if (polygon.length() < 3) return;
+		
+		polygon = cameraToScreen.apply(polygon);
+		draw(polygon, drawable, shaders);
 	}
 
 	private void draw(Polygon polygon, Drawable drawable, Shaders shaders) {
@@ -102,7 +108,7 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 					 (f1 * f5 + f3 * f6);
 				w3 = 1 - w2 - w1;
 				
-				shaders.getPixelShader().setBaryocentricCoords(w1, w2, w3);
+				shaders.getPixelShader().setBarycentricCoords(w1, w2, w3);
 
 				z = 1 / (w1 * z1 + w2 * z2 + w3 * z3);
 
@@ -125,22 +131,6 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 	
 	public static PolygonRenderer make() {
 		return new FilledPolygonRenderer();
-	}
-	
-	private ArrayList<Polygon> triangulate(Polygon polygon) {
-		ArrayList<Polygon> result = new ArrayList<Polygon>();
-		
-		for (int i = 2; i < polygon.numVertices; i++) {
-			Polygon tri = Polygon.make(
-				polygon.get(0),
-				polygon.get(i - 1),
-				polygon.get(i)
-			);
-
-			result.add(tri);
-		}
-		
-		return result;
 	}
 	
 	private FilledPolygonRenderer() {}

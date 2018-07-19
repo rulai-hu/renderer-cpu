@@ -74,11 +74,23 @@ public class Point3DH implements Point {
 	public Point3DH euclidean() {
 		if(w == 0) {
 			w = .00001;
-			throw new UnsupportedOperationException("attempt to get euclidean equivalent of point at infinity " + this);
+			throw new UnsupportedOperationException("Attempt to get euclidean equivalent of point at infinity " + this);
 		}
 		double newX = x / w;
 		double newY = y / w;
 		double newZ = z / w;
 		return new Point3DH(newX, newY, newZ);
+	}
+
+	public Point3DH add(Vector3 v) {
+		return new Point3DH(x + v.x, y + v.y, z + v.z, w);
+	}
+	
+	public Vector3 displacement(Point3DH p) {
+		return new Vector3(
+			p.getX() - x,
+			p.getY() - y,
+			p.getZ() - z
+		);
 	}
 }

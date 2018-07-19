@@ -1,13 +1,13 @@
 package shading;
 
 import polygon.Polygon;
-import windowing.graphics.Color;
+import shading.ShadingStrategy.LightingData;
 
 public class AmbientShader implements FaceShader {
-	public Color ambientLight;
+	private LightingData data;
 	
-	public AmbientShader(Color ambient) {
-		ambientLight = ambient;
+	public AmbientShader(LightingData data) {
+		this.data = data;
 	}
 
 	@Override
@@ -15,7 +15,7 @@ public class AmbientShader implements FaceShader {
 		Polygon result = Polygon.makeEmpty();
 		
 		for (int i = 0; i < polygon.length(); i++) {
-			result.add(polygon.get(i).replaceColor(ambientLight.multiply(polygon.get(i).getColor())));
+			result.add(polygon.get(i).replaceColor(data.getAmbientLight().multiply(polygon.get(i).getColor())));
 		}
 		
 		return result;

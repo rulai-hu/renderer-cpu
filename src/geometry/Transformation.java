@@ -4,6 +4,7 @@ import polygon.Polygon;
 
 public class Transformation {
 	private double[][] matrix = new double[4][4];
+	
 	public Transformation(double... entries) {
 		if (entries.length != 16) {
 			System.err.println("Bad matrix input, needs exactly 16 entries");
@@ -15,77 +16,12 @@ public class Transformation {
 			}
 		}
 	}
-	
-	public static Transformation identity() {
-		return new Transformation(
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1
-		);
-	}
-
-	public static Transformation translation(double tx, double ty, double tz) {
-		return new Transformation(
-			 1,  0,  0, tx,
-			 0,  1,  0, ty,
-			 0,  0,  1, tz,
-			 0,  0,  0,  1
-		);
-	}
-
-	public static Transformation scale(double sx, double sy, double sz) {
-		return new Transformation(
-			sx,  0,  0,  0,
-			 0, sy,  0,  0,
-			 0,  0, sz,  0,
-			 0,  0,  0,  1
-		);
-	}
 
 	// Apply is postmultiplication of current transformation with T ie. C * T
 	public Transformation apply(Transformation T) {
 		return Transformation.from2DArray(
 			mult(matrix, T.matrix)
 		);
-	}
-
-	private static Transformation from2DArray(double[][] M) {
-		return new Transformation(
-			M[0][0], M[0][1], M[0][2], M[0][3],
-			M[1][0], M[1][1], M[1][2], M[1][3],
-			M[2][0], M[2][1], M[2][2], M[2][3], 
-			M[3][0], M[3][1], M[3][2], M[3][3]
-		);
-	}
-
-	// def not optimized...
-	private double[][] mult(double[][] M1, double[][] M2) {
-		double[][] result = new double[4][4];
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				double[] v1 = { M1[i][0], M1[i][1], M1[i][2], M1[i][3] };
-				double[] v2 = { M2[0][j], M2[1][j], M2[2][j], M2[3][j] };
-				result[i][j] = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3];
-			}
-		}
-		
-		return result;
-	}
-
-	private double[] apply(double x, double y, double z, double w) {
-		double[] result = { x, y, z, w };
-		
-		for (int row = 0; row < 4; row++) {
-			double a = matrix[row][0];
-			double b = matrix[row][1];
-			double c = matrix[row][2];
-			double d = matrix[row][3];
-			
-			result[row] = x * a + y * b + z * c + w * d;
-		}
-		
-		return result;
 	}
 	
 	public Vertex3D apply(Vertex3D vertex) {
@@ -110,6 +46,26 @@ public class Transformation {
 	public Point3DH apply(Point3DH p) {
 		double[] result = apply(p.getX(), p.getY(), p.getZ(), p.getW());
 		return new Point3DH(result[0], result[1], result[2], result[3]);
+	}
+	
+	public Vector3 apply(Vector3 v) {
+		double[] result = apply(v.x, v.y, v.z, 0);
+		return new Vector3(result[0], result[1], result[2]);
+	}
+	
+	private double[] apply(double x, double y, double z, double w) {
+		double[] result = { x, y, z, w };
+		
+		for (int row = 0; row < 4; row++) {
+			double a = matrix[row][0];
+			double b = matrix[row][1];
+			double c = matrix[row][2];
+			double d = matrix[row][3];
+			
+			result[row] = x * a + y * b + z * c + w * d;
+		}
+		
+		return result;
 	}
 	
 	public String toString() {
@@ -159,5 +115,55 @@ public class Transformation {
 			 0,  0,  1,  0,
 			 0,  0,  0,  1
 		);
+	}
+	
+	public static Transformation identity() {
+		return new Transformation(
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+		);
+	}
+
+	public static Transformation translation(double tx, double ty, double tz) {
+		return new Transformation(
+			 1,  0,  0, tx,
+			 0,  1,  0, ty,
+			 0,  0,  1, tz,
+			 0,  0,  0,  1
+		);
+	}
+
+	public static Transformation scale(double sx, double sy, double sz) {
+		return new Transformation(
+			sx,  0,  0,  0,
+			 0, sy,  0,  0,
+			 0,  0, sz,  0,
+			 0,  0,  0,  1
+		);
+	}
+	
+	private static Transformation from2DArray(double[][] M) {
+		return new Transformation(
+			M[0][0], M[0][1], M[0][2], M[0][3],
+			M[1][0], M[1][1], M[1][2], M[1][3],
+			M[2][0], M[2][1], M[2][2], M[2][3], 
+			M[3][0], M[3][1], M[3][2], M[3][3]
+		);
+	}
+
+	// def not optimized...
+	private double[][] mult(double[][] M1, double[][] M2) {
+		double[][] result = new double[4][4];
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				double[] v1 = { M1[i][0], M1[i][1], M1[i][2], M1[i][3] };
+				double[] v2 = { M2[0][j], M2[1][j], M2[2][j], M2[3][j] };
+				result[i][j] = v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2] + v1[3] * v2[3];
+			}
+		}
+		
+		return result;
 	}
 }

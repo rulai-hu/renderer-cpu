@@ -1,6 +1,5 @@
 package client.interpreter;
 
-import java.util.Random;
 import java.util.Stack;
 
 import client.interpreter.LineBasedReader;
@@ -9,6 +8,7 @@ import geometry.Vertex3D;
 import line.LineRenderer;
 import client.RendererTrio;
 import geometry.Transformation;
+import geometry.Vector3;
 import polygon.Clipper;
 import polygon.Polygon;
 import polygon.PolygonRenderer;
@@ -32,10 +32,13 @@ public class SimpInterpreter {
 	
 	private Transformation normalize;
 	
-	private LineBasedReader reader;
 	private Stack<LineBasedReader> readerStack;
-	
+	private LineBasedReader reader;
+
 	private Color defaultColor = Color.WHITE;
+	private double defaultSpecularCoefficient = 0;
+	private double defaultShininess = 1;
+	
 	private Drawable _canvas; // save the original canvas so we can go back to it
 	private Drawable canvas;
 	
@@ -49,7 +52,7 @@ public class SimpInterpreter {
 	private ShadingStrategy shading;
 
 	private boolean cameraLoaded = false;
-	private boolean cullBackfaces = true;
+	private boolean cullBackfaces = false;
 	
 	public enum RenderStyle {
 		FILLED,
@@ -129,13 +132,19 @@ public class SimpInterpreter {
 		double A = cleanNumber(tokens[4]);
 		double B = cleanNumber(tokens[5]);
 		
-		Point3DH light = CTM.apply(new Point3DH(0, 0, 0, 1));
+		//Point3DH pos = normalize.apply(CTM.apply(new Point3DH(0, 0, 0, 1)));
+		Point3DH pos = CTM.apply(new Point3DH(0, 0, 0, 1));
+		//pos = new Point3DH(pos.getX() / pos.getW(), pos.getY() / pos.getW(), -pos.getW());
 		
-		shading.registerPointLight(light, new Color(r, g, b), A, B);
+		System.out.println("Placing point light at " + pos);
+		
+		shading.registerPointLight(pos, new Color(r, g, b), A, B);
 	}
 
 	private void interpretSurface(String[] tokens) {
-		this.defaultColor = interpretColor(tokens, 1);
+		defaultColor = interpretColor(tokens, 1);
+		defaultSpecularCoefficient = cleanNumber(tokens[4]);
+		defaultShininess = cleanNumber(tokens[5]);
 	}
 
 	private void interpretDepth(String[] tokens) {
@@ -188,12 +197,11 @@ public class SimpInterpreter {
 		Polygon viewPolygon = CTM.apply(polygon);
 
 		if (cullBackfaces) {
-			double[] normal = Vertex3D.cross(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
+			Vector3 normal = Vector3.cross(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
 			
-			double[] eye = { -viewPolygon.get(0).getX(), -viewPolygon.get(0).getY(), -viewPolygon.get(0).getZ() };
-			double dot = (normal[0] * eye[0] + normal[1] * eye[1] + normal[2] * eye[2]);
-	
-			if (dot < 0) {
+			Vector3 eye = new Vector3(-viewPolygon.get(0).getX(), -viewPolygon.get(0).getY(), -viewPolygon.get(0).getZ());
+			
+			if (normal.dot(eye) < 0) {
 				return;
 			}
 		}
@@ -207,38 +215,28 @@ public class SimpInterpreter {
 		
 		drawFaceNormals(viewPolygon);
 		
-		viewPolygon = normalize.apply(viewPolygon);
-		
-		viewPolygon = clipper.clip(viewPolygon);
-
-		if (viewPolygon.length() < 3) {
-			return;
-		}
-		
-		viewPolygon = transformToCamera(viewPolygon);
-		
-		polygonRenderer.drawPolygon(viewPolygon, canvas, shading.getShader());
+		polygonRenderer.drawPolygon(viewPolygon, canvas, shading.getShader(), clipper, normalize, cameraToScreen);
 	}
 	
-	private void drawFaceNormals(Polygon polygon) {
-		if (polygon.length() != 3) return;
-		Point3DH p1 = new Point3DH(0, 0, 0, 1);
-		Point3DH p2;
-		
-		for (int i = 0; i < polygon.length(); i++) {
-			p1 = p1.add(polygon.get(i).getPoint3D());
-		}
-		
-		p1 = p1.scale(0.333333);
-		
-		if (polygon.hasAveragedVertexNormal()) {
-			System.out.println("using avg vertex normal");
-			p2 = polygon.getAveragedVertexNormal();
-		} else {
-			p2 = polygon.getFaceNormal();
+	private void drawFaceNormals(Polygon polygon) {		
+		if (polygon.length() > 3) {
+			for (Polygon tri : polygon.triangulate()) {
+				drawFaceNormals(tri);
+			}
+			
+			return;
 		}
 
-		p2 = p1.add(p2.scale(2));
+		
+		Point3DH p1 = polygon.getCentroid();
+		Vector3 normal;
+		if (polygon.hasAveragedVertexNormal()) {
+			normal = polygon.getAveragedVertexNormal();
+		} else {
+			normal = polygon.getFaceNormal();
+		}
+
+		Point3DH p2 = p1.add(normal.multiply(1.5));
 
 		p1 = normalize.apply(p1);
 		p2 = normalize.apply(p2);
@@ -449,9 +447,9 @@ public class SimpInterpreter {
 	}
 	
 	private void interpretPolygon(String[] tokens) {
-		Vertex3D[] vertices = interpretVertices(tokens, 3, 1);
+		Vertex3D[] v = interpretVertices(tokens, 3, 1);
 
-		polygon(vertices[0], vertices[1], vertices[2]);
+		polygon(Polygon.make(v[0], v[1], v[2]).setSpecularData(defaultSpecularCoefficient, defaultShininess));
 	}
 	
 	public Vertex3D[] interpretVertices(String[] tokens, int numVertices, int startingIndex) {
@@ -497,12 +495,12 @@ public class SimpInterpreter {
 		return new Point3DH(x, y, z);
 	}
 	
-	public Point3DH interpretNormal(String[] tokens, int startingIndex) {
+	public Vector3 interpretNormal(String[] tokens, int startingIndex) {
 		double x = cleanNumber(tokens[startingIndex]);
 		double y = cleanNumber(tokens[startingIndex + 1]);
 		double z = cleanNumber(tokens[startingIndex + 2]);
 		
-		return new Point3DH(x, y, z, 0);
+		return new Vector3(x, y, z);
 	}
 	
 	public Color interpretColor(String[] tokens, int startingIndex) {
@@ -513,10 +511,6 @@ public class SimpInterpreter {
 		return new Color(r, g, b);
 	}
 	
-	public void polygon(Vertex3D p1, Vertex3D p2, Vertex3D p3) {
-		polygon(Polygon.make(p1, p2, p3));
-	}
-
 	private Polygon transformToCamera(Polygon polygon) {
 		Polygon result = Polygon.makeEmpty();
 		

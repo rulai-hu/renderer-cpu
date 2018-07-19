@@ -36,7 +36,7 @@ public class ColorInterpolatingPixelShader implements PixelShader {
 		b3 = v3.getColor().getB() / z3;
 	}
 	
-	public void setBaryocentricCoords(double w1, double w2, double w3) {
+	public void setBarycentricCoords(double w1, double w2, double w3) {
 		this.w1 = w1;
 		this.w2 = w2;
 		this.w3 = w3;

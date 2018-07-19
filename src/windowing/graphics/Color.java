@@ -2,6 +2,8 @@ package windowing.graphics;
 
 import java.util.Random;
 
+import geometry.Vector3;
+
 public class Color {
 	public static final Color BLACK = new Color(0.0, 0.0, 0.0);
 	public static final Color WHITE = new Color(1.0, 1.0, 1.0);
@@ -89,6 +91,10 @@ public class Color {
 		double g = getG() * otherColor.getG();
 		double b = getB() * otherColor.getB();
 		return new Color(r, g, b);
+	}
+	
+	public Vector3 toVector3() {
+		return new Vector3(r, g, b);
 	}
 	
 	// could implement as: this.scale(thisAlpha).add(otherColor.scale(1-thisAlpha))

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import geometry.Point3DH;
+import geometry.Vector3;
 import geometry.Vertex3D;
 import polygon.Polygon;
 import windowing.graphics.Color;
@@ -58,7 +59,7 @@ class ObjReader {
 	
 	private List<Vertex3D> objVertices;
 	//private List<Vertex3D> transformedVertices;
-	private List<Point3DH> objNormals;
+	private List<Vector3> objNormals;
 	private List<ObjFace> objFaces;
 
 	private Color defaultColor;
@@ -70,28 +71,15 @@ class ObjReader {
 		this.simpInterpreter = interpreter;
 		this.objVertices = new ArrayList<Vertex3D>();
 		//this.transformedVertices = new ArrayList<Vertex3D>();
-		this.objNormals = new ArrayList<Point3DH>();
+		this.objNormals = new ArrayList<Vector3>();
 		this.objFaces = new ArrayList<ObjFace>();
 		this.defaultColor = defaultColor;
 	}
 
 	public void render() {
-		//transformVertices();
-		//transformNormals();
-		
 		for (ObjFace face: objFaces) {
 			simpInterpreter.polygon(face.toPolygon());
 		}
-	}
-	
-	private void transformNormals() {
-		ArrayList<Point3DH> normals = new ArrayList<Point3DH>();
-
-		for (Point3DH normal : objNormals) {
-		    normals.add(simpInterpreter.getCTM().apply(normal));
-		}
-		
-		objNormals = normals;
 	}
 
 	public void read() {
@@ -186,7 +174,7 @@ class ObjReader {
 			throw new BadObjFileException("Vertex normal with wrong number of arguments : " + numArgs + ": " + tokens);				
 		}
 	
-		Point3DH normal = simpInterpreter.interpretNormal(tokens, 1);
+		Vector3 normal = simpInterpreter.interpretNormal(tokens, 1);
 		objNormals.add(normal);
 	}
 	
