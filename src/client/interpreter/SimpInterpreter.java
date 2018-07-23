@@ -12,7 +12,7 @@ import geometry.Vector3;
 import polygon.Clipper;
 import polygon.Polygon;
 import polygon.PolygonRenderer;
-import shading.ShadingStrategy;
+import shading.ShadingStyle;
 import windowing.drawable.DepthCueingDrawable;
 import windowing.drawable.Drawable;
 import windowing.drawable.ZCullingDrawable;
@@ -28,16 +28,16 @@ public class SimpInterpreter {
 	private Stack<Transformation> transforms = new Stack<Transformation>();
 	private Transformation CTM;
 	private Transformation worldToCamera;
-	private Transformation cameraToScreen;
+	private Transformation viewport;
 	
-	private Transformation normalize;
+	private Transformation projection;
 	
 	private Stack<LineBasedReader> readerStack;
 	private LineBasedReader reader;
 
 	private Color defaultColor = Color.WHITE;
-	private double defaultSpecularCoefficient = 0;
-	private double defaultShininess = 1;
+	private double defaultSpecularCoefficient = 0.3;
+	private double defaultShininess = 8;
 	
 	private Drawable _canvas; // save the original canvas so we can go back to it
 	private Drawable canvas;
@@ -49,10 +49,10 @@ public class SimpInterpreter {
 	
 	private Clipper clipper;
 	
-	private ShadingStrategy shading;
+	private ShadingStyle shading;
 
 	private boolean cameraLoaded = false;
-	private boolean cullBackfaces = false;
+	private boolean cullBackfaces = true;
 	
 	public enum RenderStyle {
 		FILLED,
@@ -67,7 +67,7 @@ public class SimpInterpreter {
 		this.filledRenderer = renderers.getFilledRenderer();
 		this.wireframeRenderer = renderers.getWireframeRenderer();
 		this.polygonRenderer = filledRenderer;
-		this.shading = new ShadingStrategy();
+		this.shading = new ShadingStyle();
 		this.reader = new LineBasedReader(filename);
 		this.readerStack = new Stack<>();
 		this.CTM = Transformation.identity();
@@ -116,13 +116,24 @@ public class SimpInterpreter {
 		case "depth" :		interpretDepth(tokens);		break;
 		case "obj" :			interpretObj(tokens);		break;
 		case "flat" :		flatShading(); 				break;
+		case "gouraud" :		gouraudShading();			break;
+		case "phong" :		phongShading();				break;
 		
 		case "light" :		interpretLight(tokens);		break;
 		
 		default :
-			//System.err.println("bad input line: " + tokens);
 			break;
 		}
+	}
+
+	private void phongShading() {
+		cullBackfaces = true;
+		shading.phong();
+	}
+
+	private void gouraudShading() {
+		cullBackfaces = true;
+		shading.gouraud();
 	}
 
 	private void interpretLight(String[] tokens) {
@@ -132,19 +143,22 @@ public class SimpInterpreter {
 		double A = cleanNumber(tokens[4]);
 		double B = cleanNumber(tokens[5]);
 		
-		//Point3DH pos = normalize.apply(CTM.apply(new Point3DH(0, 0, 0, 1)));
 		Point3DH pos = CTM.apply(new Point3DH(0, 0, 0, 1));
-		//pos = new Point3DH(pos.getX() / pos.getW(), pos.getY() / pos.getW(), -pos.getW());
+
+		System.out.println("Placing point light at " + pos + " with color: " + r + ", " + g + ", " + b);
 		
-		System.out.println("Placing point light at " + pos);
-		
-		shading.registerPointLight(pos, new Color(r, g, b), A, B);
+		shading.placePointLight(pos, new Color(r, g, b), A, B);
 	}
 
 	private void interpretSurface(String[] tokens) {
 		defaultColor = interpretColor(tokens, 1);
-		defaultSpecularCoefficient = cleanNumber(tokens[4]);
-		defaultShininess = cleanNumber(tokens[5]);
+		
+		if (tokens.length > 4) {
+			defaultSpecularCoefficient = cleanNumber(tokens[4]);
+			defaultShininess = cleanNumber(tokens[5]);
+		}
+		
+		System.out.println("DefaultColor=" + defaultColor + " ks=" + defaultSpecularCoefficient + " s=" + defaultShininess);
 	}
 
 	private void interpretDepth(String[] tokens) {
@@ -192,32 +206,64 @@ public class SimpInterpreter {
 		);
 	}
 	
-	// Takes a polygon in OCS and transforms it to VCS before rendering
+	private Polygon transformToCameraSpace(Polygon polygon) {
+		polygon = CTM.apply(polygon);
+		
+		for (Vertex3D v : polygon.getVertexList()) {
+			v.saveCameraSpaceData();
+		}
+
+		return polygon;
+	}
+	
 	public void polygon(Polygon polygon) {
-		Polygon viewPolygon = CTM.apply(polygon);
+		polygon.setSpecularData(defaultSpecularCoefficient, defaultShininess)
+			.setSurfaceColor(defaultColor);
+		
+		polygon = transformToCameraSpace(polygon);
 
 		if (cullBackfaces) {
-			Vector3 normal = Vector3.cross(viewPolygon.get(0), viewPolygon.get(1), viewPolygon.get(2));
+			Vector3 normal = Vector3.cross(polygon.get(0), polygon.get(1), polygon.get(2));
 			
-			Vector3 eye = new Vector3(-viewPolygon.get(0).getX(), -viewPolygon.get(0).getY(), -viewPolygon.get(0).getZ());
+			Vector3 eye = new Vector3(-polygon.get(0).getX(), -polygon.get(0).getY(), -polygon.get(0).getZ());
 			
 			if (normal.dot(eye) < 0) {
 				return;
 			}
 		}
 
-		// Clip near and far in view space
-		viewPolygon = clipper.clipZ(viewPolygon);
+		polygon = shading.shadeVertices(polygon);
 		
-		if (viewPolygon.length() < 3) {
+		polygon = shading.shadeFace(polygon);
+
+		// Clip near and far in view space
+		polygon = clipper.clipZ(polygon);
+
+		if (polygon.length() < 3) {
 			return;
 		}
 		
-		drawFaceNormals(viewPolygon);
+		// Do this before projection..
+		//drawFaceNormals(polygon);
 		
-		polygonRenderer.drawPolygon(viewPolygon, canvas, shading.getShader(), clipper, normalize, cameraToScreen);
+		polygon = projection.apply(polygon);
+		polygon = clipper.clip(polygon);
+		
+		if (polygon.length() < 3) return;
+		
+		// Don't draw polygons with zero area
+		Vector3 cross = Vector3.cross(polygon.get(0), polygon.get(1), polygon.get(2));
+		
+		if (cross.x == 0 && cross.y == 0 && cross.z == 0) {
+			return;
+		}
+
+		for (Polygon tri : polygon.triangulate()) {
+			polygonRenderer.drawPolygon(viewport.apply(tri), canvas, shading.getPixelShader());
+		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void drawFaceNormals(Polygon polygon) {		
 		if (polygon.length() > 3) {
 			for (Polygon tri : polygon.triangulate()) {
@@ -230,6 +276,7 @@ public class SimpInterpreter {
 		
 		Point3DH p1 = polygon.getCentroid();
 		Vector3 normal;
+		
 		if (polygon.hasAveragedVertexNormal()) {
 			normal = polygon.getAveragedVertexNormal();
 		} else {
@@ -238,8 +285,8 @@ public class SimpInterpreter {
 
 		Point3DH p2 = p1.add(normal.multiply(1.5));
 
-		p1 = normalize.apply(p1);
-		p2 = normalize.apply(p2);
+		p1 = projection.apply(p1);
+		p2 = projection.apply(p2);
 		
 		double z1 = p1.getW();
 		double z2 = p2.getW();
@@ -253,8 +300,8 @@ public class SimpInterpreter {
 	private void line(Vertex3D v1, Vertex3D v2) {
 		Point3DH p1 = v1.getPoint3D();
 		Point3DH p2 = v2.getPoint3D();
-		p1 = normalize.apply(CTM.apply(p1));
-		p2 = normalize.apply(CTM.apply(p2));
+		p1 = projection.apply(CTM.apply(p1));
+		p2 = projection.apply(CTM.apply(p2));
 		
 		double w1 = p1.getW();
 		double w2 = p2.getW();
@@ -290,7 +337,7 @@ public class SimpInterpreter {
 		
 		far = Math.abs(far);
 		
-		cameraToScreen = makeProjectedToScreenTransform(xlow, xhigh, ylow, yhigh);
+		viewport = makeProjectedToScreenTransform(xlow, xhigh, ylow, yhigh);
 		
 		double s1 = 2 / (xhigh - xlow);
 		double s2 = 2 / (yhigh - ylow);
@@ -301,7 +348,7 @@ public class SimpInterpreter {
 		
 		double t1 = (2 * far) / (1 - far);
 		
-		normalize = new Transformation(
+		projection = new Transformation(
 			s1,  0, z1,  0,
 			 0, s2, z2,  0,
 			 0,  0, s3, t1,
@@ -310,6 +357,7 @@ public class SimpInterpreter {
 	}
 
 	private void flatShading() {
+		cullBackfaces = true;
 		shading.flat();
 	}
 	
@@ -339,7 +387,7 @@ public class SimpInterpreter {
 	}
 	
 	private void wire() {
-		//cullBackfaces = false;
+		cullBackfaces = true;
 		polygonRenderer = wireframeRenderer;
 	}
 	
@@ -449,7 +497,7 @@ public class SimpInterpreter {
 	private void interpretPolygon(String[] tokens) {
 		Vertex3D[] v = interpretVertices(tokens, 3, 1);
 
-		polygon(Polygon.make(v[0], v[1], v[2]).setSpecularData(defaultSpecularCoefficient, defaultShininess));
+		polygon(Polygon.make(v[0], v[1], v[2]));
 	}
 	
 	public Vertex3D[] interpretVertices(String[] tokens, int numVertices, int startingIndex) {
@@ -511,18 +559,8 @@ public class SimpInterpreter {
 		return new Color(r, g, b);
 	}
 	
-	private Polygon transformToCamera(Polygon polygon) {
-		Polygon result = Polygon.makeEmpty();
-		
-		for (int i = 0; i < polygon.length(); i++) {
-			result.add(transformToCamera(polygon.get(i)));
-		}
-		
-		return result;
-	}
-	
 	private Vertex3D transformToCamera(Vertex3D vertex) {
-		return cameraToScreen.apply(vertex);
+		return viewport.apply(vertex);
 	}
 
 	public Point3DH interpretPointWithW(String[] tokens, int startingIndex) {

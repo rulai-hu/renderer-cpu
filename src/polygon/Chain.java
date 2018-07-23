@@ -1,14 +1,13 @@
 package polygon;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import geometry.Vertex3D;
 
 public class Chain {
 
 	protected int numVertices = 0;
-	protected List<Vertex3D> vertices = new ArrayList<Vertex3D>();
+	protected ArrayList<Vertex3D> vertices = new ArrayList<Vertex3D>();
 
 	// initialVertices are rounded to prevent rounding errors in interpolation.
 	public Chain(Vertex3D... initialVertices) {

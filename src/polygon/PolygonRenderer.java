@@ -1,9 +1,8 @@
 package polygon;
 
-import geometry.Transformation;
-import shading.Shaders;
+import shading.PixelShader;
 import windowing.drawable.Drawable;
 
 public interface PolygonRenderer {
-	public void drawPolygon(Polygon polygon, Drawable drawable, Shaders shaders, Clipper clipper, Transformation normalize, Transformation cameraToScreen);
+	public void drawPolygon(Polygon polygon, Drawable drawable, PixelShader pixelShader);
 }

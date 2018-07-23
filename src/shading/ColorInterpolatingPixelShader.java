@@ -14,7 +14,7 @@ public class ColorInterpolatingPixelShader implements PixelShader {
 	
 	Polygon polygon;
 
-	public void setPolygon(Polygon polygon) {		
+	public void precompute(Polygon polygon) {		
 		Vertex3D v1 = polygon.get(0);
 		Vertex3D v2 = polygon.get(1);
 		Vertex3D v3 = polygon.get(2);
@@ -36,17 +36,9 @@ public class ColorInterpolatingPixelShader implements PixelShader {
 		b3 = v3.getColor().getB() / z3;
 	}
 	
-	public void setBarycentricCoords(double w1, double w2, double w3) {
-		this.w1 = w1;
-		this.w2 = w2;
-		this.w3 = w3;
-	}
-
 	@Override
-	public Color shade(Vertex3D current) {
+	public Color shade(Polygon polygon, double z, double w1, double w2, double w3) {
 		assert(polygon != null);
-		
-		z = current.getZ();
 		
 		r = w1 * r1 + w2 * r2 + w3 * r3;
 		g = w1 * g1 + w2 * g2 + w3 * g3;

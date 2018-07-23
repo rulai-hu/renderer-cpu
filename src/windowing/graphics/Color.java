@@ -43,6 +43,11 @@ public class Color {
 	// getters (2 formats)
 	//
 	
+	public Color(Vector3 v) {
+		this(v.x, v.y, v.z);
+	}
+
+
 	public double getR() {
 		return r;
 	}
@@ -92,6 +97,14 @@ public class Color {
 		double b = getB() * otherColor.getB();
 		return new Color(r, g, b);
 	}
+
+	public Color multiply(Vector3 v) {
+		double r = getR() * v.x;
+		double g = getG() * v.y;
+		double b = getB() * v.z;
+		return new Color(r, g, b);
+	}
+
 	
 	public Vector3 toVector3() {
 		return new Vector3(r, g, b);
@@ -196,5 +209,4 @@ public class Color {
 	public static Color random() {
 		return random(random);
 	}
-
 }

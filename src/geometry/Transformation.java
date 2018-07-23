@@ -34,7 +34,9 @@ public class Transformation {
 	}
 	
 	public Polygon apply(Polygon polygon) {
-		Polygon result = Polygon.makeEmpty();
+		Polygon result = Polygon.makeEmpty()
+				.setSpecularData(polygon.getSpecularCoefficient(), polygon.getShininess())
+				.setSurfaceColor(polygon.getSurfaceColor());
 		
 		for (int i = 0; i < polygon.length(); i++) {
 			result.add(apply(polygon.get(i)));

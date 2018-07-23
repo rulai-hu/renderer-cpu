@@ -2,6 +2,7 @@ package polygon;
 
 import geometry.Point3DH;
 import geometry.Vertex3D;
+import windowing.graphics.Color;
 
 public class Clipper {
 	private double nearClip = Double.POSITIVE_INFINITY;
@@ -21,31 +22,42 @@ public class Clipper {
 	}
 	
 	public Polygon clipZ(Polygon polygon) {
+		double specCoeff = polygon.getSpecularCoefficient();
+		double shininess = polygon.getShininess();
+		Color surfaceColor = polygon.getSurfaceColor();
+		
 		polygon = clip(polygon, new double[] {0, 0, -1}, -nearClip + 0.0001, false);
-		return clip(polygon, new double[] {0, 0, 1}, farClip + 0.0001, false);
+		return clip(polygon, new double[] {0, 0, 1}, farClip + 0.0001, false)
+				.setSpecularData(specCoeff, shininess)
+				.setSurfaceColor(surfaceColor);
 	}
 	
 	public Polygon clip(Polygon polygon) {
+		Color surfaceColor = polygon.getSurfaceColor();
+		double ks = polygon.getSpecularCoefficient();
+		double s = polygon.getShininess();
+		
 		Polygon result = Polygon.makeEmpty();
 		
 		Point3DH p;
 		double x, y, w;
-		for (int i = 0; i < polygon.length(); i++) {
-			p = polygon.get(i).getPoint3D();
+		
+		for (Vertex3D v : polygon.getVertexList()) {
+			p = v.getPoint3D();
 
 			w = p.getW();
 			x = p.getX();
 			y = p.getY();
 			
-			result.add(polygon.get(i).replacePoint(new Point3DH(x/w, y/w, -w)));
+			result.add(v.replacePoint(new Point3DH(x/w, y/w, -w)));
 		}
-		
+
 		result = clip(result, normals[0], -1, true);
 		result = clip(result, normals[1], -1, true);
 		result = clip(result, normals[2], -1, true);
 		result = clip(result, normals[3], -1, true);
-
-		return result;
+		
+		return result.setSpecularData(ks, s).setSurfaceColor(surfaceColor);
 	}
 	
 	private Polygon clip(Polygon polygon, double[] normal, double clipDistance, boolean perspCorrect) {
@@ -57,6 +69,7 @@ public class Clipper {
 		
 		Vertex3D currentVertex = polygon.get(0);
 		Vertex3D nextVertex;
+		Vertex3D newVertex;
 		
 		double currentDot = dot(currentVertex.getPoint3D(), normal);
 		double nextDot;
@@ -92,7 +105,9 @@ public class Clipper {
 
 				if (perspCorrect) z = 1 / z;
 
-				result.add(new Vertex3D(x, y, z, nextVertex.getColor()));
+				newVertex = new Vertex3D(x, y, z, nextVertex.getColor());
+
+				result.add(newVertex);
 			}
 			
 			currentDot = nextDot;

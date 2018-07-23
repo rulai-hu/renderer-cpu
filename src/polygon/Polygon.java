@@ -5,6 +5,7 @@ import java.util.List;
 
 import geometry.Vertex;
 import geometry.Vertex3D;
+import windowing.graphics.Color;
 import geometry.Point3DH;
 import geometry.Vector3;
 
@@ -13,10 +14,11 @@ public class Polygon extends Chain {
 	private static final int INDEX_STEP_FOR_COUNTERCLOCKWISE = 1;
 	private double shininess;
 	private double specCoefficient;
+	private Color surfaceColor = Color.GREEN;
 	
 	private Polygon(Vertex3D... initialVertices) {
 		super(initialVertices);
-		if(length() < 3) {
+		if (length() < 3) {
 			throw new IllegalArgumentException("Not enough vertices to construct a polygon");
 		}
 	}
@@ -162,8 +164,11 @@ public class Polygon extends Chain {
 		return true;
 	}
 	
+	public ArrayList<Vertex3D> getVertexList() {
+		return vertices;
+	}
+	
 	public Vector3 getAveragedVertexNormal() {
-		//double[] result = { 0, 0, 0 };
 		Vector3 normal = new Vector3(0, 0, 0);
 		for (int i = 0; i < numVertices; i++) {
 			normal.add(get(i).getNormal());
@@ -173,7 +178,13 @@ public class Polygon extends Chain {
 	}
 
 	public Vector3 getFaceNormal() {
-		return Vector3.cross(get(0), get(1), get(2)).normalize();
+		Vector3 res = Vector3.cross(get(0), get(1), get(2));
+		
+		if (res.x == 0 && res.y == 0 && res.z == 0) {
+			System.out.println("BAD:" + this);
+		}
+		
+		return res.normalize();
 	}
 	
 	public ArrayList<Polygon> triangulate() {
@@ -181,10 +192,12 @@ public class Polygon extends Chain {
 		
 		for (int i = 2; i < numVertices; i++) {
 			Polygon tri = Polygon.make(
-				get(0),
-				get(i - 1),
-				get(i)
-			).setSpecularData(specCoefficient, shininess);
+					get(0),
+					get(i - 1),
+					get(i)
+				)
+				.setSpecularData(specCoefficient, shininess)
+				.setSurfaceColor(surfaceColor);
 
 			result.add(tri);
 		}
@@ -193,15 +206,13 @@ public class Polygon extends Chain {
 	}
 
 	public Point3DH getCentroid() {
-		if (numVertices != 3) {
-			System.err.println("Can't find centroid of polygon");
+		Point3DH centroid = new Point3DH(0, 0, 0, 1);
+		
+		for (Vertex3D v : vertices) {
+			centroid = centroid.add(v.getPoint3D());
 		}
 		
-		Point3DH p1 = get(0).getPoint3D();
-		Point3DH p2 = get(1).getPoint3D();
-		Point3DH p3 = get(2).getPoint3D();
-		
-		return p1.add(p2.add(p3)).scale(0.333333);
+		return centroid.scale(1 / (double) numVertices);
 	}
 	
 	public double getSpecularCoefficient() {
@@ -215,6 +226,15 @@ public class Polygon extends Chain {
 	public Polygon setSpecularData(double ks, double s) {
 		specCoefficient = ks;
 		shininess = s;
+		return this;
+	}
+
+	public Color getSurfaceColor() {
+		return surfaceColor;
+	}
+	
+	public Polygon setSurfaceColor(Color color) {
+		surfaceColor = color;
 		return this;
 	}
 }

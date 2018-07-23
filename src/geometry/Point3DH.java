@@ -93,4 +93,12 @@ public class Point3DH implements Point {
 			p.getZ() - z
 		);
 	}
+
+	public static Point3DH interpolate(Point3DH p1, Point3DH p2, double interpolant) {
+		double x = p1.getX() + (p2.getX() - p1.getX()) * interpolant;
+		double y = p1.getX() + (p2.getY() - p1.getY()) * interpolant;
+		double z = p1.getX() + (p2.getZ() - p1.getZ()) * interpolant;
+		
+		return new Point3DH(x, y, z, 1);
+	}
 }

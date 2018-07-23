@@ -41,7 +41,15 @@ public class Vector3 {
 		double norm = norm();
 		
 		if (norm == 0) {
-			System.err.println("norm = 0");
+			System.err.println("norm=" + norm + ", " + this);
+			
+			try {
+				throw new Exception("norm bad");
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				System.exit(1);
+			}
 		}
 		
 		x /= norm;
@@ -102,5 +110,12 @@ public class Vector3 {
 
 	public double norm() {
 		return Math.sqrt((x * x) + (y * y) + (z * z));
+	}
+
+	public Vector3 clamp(double max) {
+		this.x = Math.min(this.x, max);
+		this.y = Math.min(this.y, max);
+		this.z = Math.min(this.z, max);
+		return this;
 	}
 }

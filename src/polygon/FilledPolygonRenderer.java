@@ -1,35 +1,17 @@
 package polygon;
 
-import geometry.Transformation;
 import geometry.Vertex3D;
-import shading.Shaders;
+import shading.PixelShader;
 import windowing.drawable.Drawable;
 import windowing.graphics.Color;
 
 public class FilledPolygonRenderer implements PolygonRenderer {
 	@Override
-	public void drawPolygon(Polygon polygon, Drawable drawable, Shaders shaders,
-			Clipper clipper, Transformation normalize, Transformation cameraToScreen) {
-		
-		if (polygon.length() > 3) {
-			for (Polygon tri : polygon.triangulate()) {
-				drawPolygon(tri, drawable, shaders, clipper, normalize, cameraToScreen);
-			}
-			
-			return;
-		}
-		
-		polygon = shaders.shadeFace(polygon);
-		polygon = normalize.apply(polygon);
-		polygon = clipper.clip(polygon);
-
-		if (polygon.length() < 3) return;
-		
-		polygon = cameraToScreen.apply(polygon);
-		draw(polygon, drawable, shaders);
+	public void drawPolygon(Polygon polygon, Drawable drawable, PixelShader pixelShader) {
+		draw(polygon, drawable, pixelShader);
 	}
 
-	private void draw(Polygon polygon, Drawable drawable, Shaders shaders) {
+	private void draw(Polygon polygon, Drawable drawable, PixelShader pixelShader) {
 		Chain left = polygon.leftChain();
 		Chain right = polygon.rightChain();
 		
@@ -45,8 +27,12 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 		Vertex3D v2 = longest.get(1);
 		Vertex3D v3 = longest.get(2);
 		
-		shaders.setPolygon(Polygon.make(v1, v2, v3));
+		Polygon ordered = Polygon.make(v1, v2, v3)
+				.setSpecularData(polygon.getSpecularCoefficient(), polygon.getShininess())
+				.setSurfaceColor(polygon.getSurfaceColor());
 		
+		pixelShader.precompute(ordered);
+
 		int maxY = v1.getIntY();
 		int minX = v3.getIntX();
 		int minY = v3.getIntY();
@@ -108,11 +94,9 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 					 (f1 * f5 + f3 * f6);
 				w3 = 1 - w2 - w1;
 				
-				shaders.getPixelShader().setBarycentricCoords(w1, w2, w3);
-
 				z = 1 / (w1 * z1 + w2 * z2 + w3 * z3);
 
-				Color color = shaders.shadePixel(new Vertex3D(i, currY, z, Color.BLACK));
+				Color color = pixelShader.shade(ordered, z, w1, w2, w3);
 				
 				drawable.setPixel(i, currY, z, color.asARGB());
 			}
