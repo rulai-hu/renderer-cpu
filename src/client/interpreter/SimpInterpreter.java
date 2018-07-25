@@ -142,8 +142,6 @@ public class SimpInterpreter {
 		
 		Point3DH pos = CTM.apply(new Point3DH(0, 0, 0, 1));
 
-		//System.out.println("Placing point light at " + pos + " with color: " + r + ", " + g + ", " + b);
-		
 		shading.placePointLight(pos, new Color(r, g, b), A, B);
 	}
 
@@ -154,8 +152,6 @@ public class SimpInterpreter {
 			defaultSpecularCoefficient = cleanNumber(tokens[4]);
 			defaultShininess = cleanNumber(tokens[5]);
 		}
-		
-		//System.out.println("DefaultColor=" + defaultColor + " ks=" + defaultSpecularCoefficient + " s=" + defaultShininess);
 	}
 
 	private void interpretDepth(String[] tokens) {
@@ -567,9 +563,5 @@ public class SimpInterpreter {
 		double w = cleanNumber(tokens[startingIndex + 3]);
 		
 		return new Point3DH(x, y, z, w);
-	}
-
-	public Transformation getCTM() {
-		return CTM;
 	}
 }

@@ -33,21 +33,14 @@ public class Point3DH implements Point {
 	public double getW() {
 		return w;
 	}
-	public int getIntX() {
-		return (int) Math.round(x);
-	}
-	public int getIntY() {
-		return (int) Math.round(y);
-	}
-	public int getIntZ() {
-		return (int) Math.round(z);
-	}
+	
 	public Point3DH round() {
 		double newX = Math.round(x);
 		double newY = Math.round(y);
 		double newZ = Math.round(z);
 		return new Point3DH(newX, newY, newZ);
 	}
+	
 	public Point3DH add(Point point) {
 		Point3DH other = (Point3DH)point;
 		double newX = x + other.getX();
@@ -55,6 +48,7 @@ public class Point3DH implements Point {
 		double newZ = z + other.getZ();
 		return new Point3DH(newX, newY, newZ);
 	}
+	
 	public Point3DH subtract(Point point) {
 		Point3DH other = (Point3DH)point;
 		double newX = x - other.getX();
@@ -62,24 +56,16 @@ public class Point3DH implements Point {
 		double newZ = z - other.getZ();
 		return new Point3DH(newX, newY, newZ);
 	}
+	
 	public Point3DH scale(double scalar) {
 		double newX = x * scalar;
 		double newY = y * scalar;
 		double newZ = z * scalar;
 		return new Point3DH(newX, newY, newZ);
 	}
+	
 	public String toString() {
 		return "[" + x + " " + y + " " + z + " " + w + "]t";
-	}
-	public Point3DH euclidean() {
-		if(w == 0) {
-			w = .00001;
-			throw new UnsupportedOperationException("Attempt to get euclidean equivalent of point at infinity " + this);
-		}
-		double newX = x / w;
-		double newY = y / w;
-		double newZ = z / w;
-		return new Point3DH(newX, newY, newZ);
 	}
 
 	public Point3DH add(Vector3 v) {
@@ -92,13 +78,5 @@ public class Point3DH implements Point {
 			p.getY() - y,
 			p.getZ() - z
 		);
-	}
-
-	public static Point3DH interpolate(Point3DH p1, Point3DH p2, double interpolant) {
-		double x = p1.getX() + (p2.getX() - p1.getX()) * interpolant;
-		double y = p1.getX() + (p2.getY() - p1.getY()) * interpolant;
-		double z = p1.getX() + (p2.getZ() - p1.getZ()) * interpolant;
-		
-		return new Point3DH(x, y, z, 1);
 	}
 }

@@ -12,12 +12,15 @@ public class Point2D implements Point {
 	public double getX() {
 		return x;
 	}
+	
 	public double getY() {
 		return y;
 	}
+	
 	public int getIntX() {
 		return (int) Math.round(x);
 	}
+	
 	public int getIntY() {
 		return (int) Math.round(y);
 	}

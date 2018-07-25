@@ -17,7 +17,7 @@ public class Transformation {
 		}
 	}
 
-	// Apply is postmultiplication of current transformation with T ie. C * T
+	// Apply is post-multiplication of current transformation with T ie. C * T
 	public Transformation apply(Transformation T) {
 		return Transformation.from2DArray(
 			mult(matrix, T.matrix)

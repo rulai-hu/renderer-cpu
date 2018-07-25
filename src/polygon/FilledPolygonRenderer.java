@@ -8,10 +8,6 @@ import windowing.graphics.Color;
 public class FilledPolygonRenderer implements PolygonRenderer {
 	@Override
 	public void drawPolygon(Polygon polygon, Drawable drawable, PixelShader pixelShader) {
-		draw(polygon, drawable, pixelShader);
-	}
-
-	private void draw(Polygon polygon, Drawable drawable, PixelShader pixelShader) {
 		Chain left = polygon.leftChain();
 		Chain right = polygon.rightChain();
 		

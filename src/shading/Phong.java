@@ -35,11 +35,8 @@ public class Phong {
 			diffuseTerm = new Vector3(surfaceColor).multiply(Math.max(0, normalDotL));
 			specularTerm = ks * Math.pow(Math.max(0, R.dot(view)), s);
 			reflectedColor = new Vector3(surfaceColor).hadamard(diffuseTerm).addScalar(specularTerm);
-			
 			result.add(light.getIntensity().multiply(light.computeAttenuation(surfacePoint)).hadamard(reflectedColor));
 		}
-		
-		//System.out.println("Result:" + result);
 
 		return result.clamp(1);
 	}

@@ -40,18 +40,6 @@ public class Vector3 {
 	public Vector3 normalize() {
 		double norm = norm();
 		
-		if (norm == 0) {
-			System.err.println("norm=" + norm + ", " + this);
-			
-			try {
-				throw new Exception("norm bad");
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.exit(1);
-			}
-		}
-		
 		x /= norm;
 		y /= norm;
 		z /= norm;
