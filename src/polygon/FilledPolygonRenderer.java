@@ -1,6 +1,5 @@
 package polygon;
 
-import geometry.Vector3;
 import geometry.Vertex3D;
 import shading.PixelShader;
 import windowing.drawable.Drawable;

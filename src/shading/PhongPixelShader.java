@@ -32,20 +32,8 @@ public class PhongPixelShader extends ColorInterpolatingPixelShader {
 		} else {
 			normal = faceNormal;
 		}
-		//System.out.println("Normal:" + normal);
-		//System.out.println("InterpColor:" + interpolatedColor);
-		//System.out.println("polygon:" + cs1 + cs2 + cs3);
-			
-		Point3DH point = cs1.scale(w1).add(cs2.scale(w2)).add(cs3.scale(w3));
 		
-		if (point.getX() == 0 && point.getY() == 0 && point.getZ() == 0) {
-			/*System.err.println("BAD surfacePT");
-			System.out.println("cs1:" + cs1);
-			System.out.println("cs2:" + cs2);
-			System.out.println("cs3:" + cs3);
-			System.out.println("w1=" + w1 + " w2=" + w2 + " w3=" + w3);
-			System.out.println(point);*/
-		}
+		Point3DH point = cs1.scale(w1).add(cs2.scale(w2)).add(cs3.scale(w3));
 		
 		Color result = new Color(
 				Phong.computeColor(
@@ -65,19 +53,17 @@ public class PhongPixelShader extends ColorInterpolatingPixelShader {
 		v2 = polygon.get(1);
 		v3 = polygon.get(2);
 		
+		cs1 = v1.getCameraSpacePoint();
+		cs2 = v2.getCameraSpacePoint();
+		cs3 = v3.getCameraSpacePoint();
 		useVertexNormals = v1.hasNormal() && v2.hasNormal() && v3.hasNormal();
 		
 		if (!useVertexNormals) {
 			faceNormal = polygon.getFaceNormal();
 			
-			if (new Vector3(-v1.getCameraSpacePoint().getX(), -v1.getCameraSpacePoint().getY(), -v1.getCameraSpacePoint().getZ()).dot(faceNormal) < 0) {
+			if (new Vector3(-cs1.getX(), -cs1.getY(), -cs1.getZ()).dot(faceNormal) < 0) {
 				faceNormal.multiply(-1);
 			}
 		}
-		
-		cs1 = v1.getCameraSpacePoint();
-		cs2 = v2.getCameraSpacePoint();
-		cs3 = v3.getCameraSpacePoint();
 	}
-
 }

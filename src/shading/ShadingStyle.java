@@ -34,7 +34,6 @@ public class ShadingStyle {
 	
 	public ShadingStyle() {
 		this.globalData = new LightingData(new ArrayList<PointLight>(), Color.BLACK);
-		ambientOnly();
 	}
 	
 	public void ambientOnly() {
@@ -70,7 +69,9 @@ public class ShadingStyle {
 	}
 
 	public Polygon shadeVertices(Polygon polygon) {
-		Polygon result = Polygon.makeEmpty().setSpecularData(polygon.getSpecularCoefficient(), polygon.getShininess());
+		Polygon result = Polygon.makeEmpty()
+				.setSpecularData(polygon.getSpecularCoefficient(), polygon.getShininess())
+				.setSurfaceColor(polygon.getSurfaceColor());
 		
 		for (Vertex3D v : polygon.getVertexList()) {
 			result.add(currentVertexShader.shade(polygon, v));

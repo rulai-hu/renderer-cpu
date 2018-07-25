@@ -19,7 +19,7 @@ public class Client implements PageTurner {
 	private static final int ARGB_WHITE = 0xff_ff_ff_ff;
 	private static final int ARGB_GREEN = 0xff_00_ff_40;
 	
-	private static final int NUM_PAGES = 15;
+	private static final int NUM_PAGES = 17;
 	
 	private final Drawable drawable;
 	private int pageNumber = 0;
@@ -82,21 +82,22 @@ public class Client implements PageTurner {
 		String filename;
 
 		switch(pageNumber) {
-		case 1:  filename = "simp/page-a1";	 break;
-		case 2:  filename = "simp/page-a2";	 break;
-		case 3:	 filename = "simp/page-a3";	 break;
-		case 4:  filename = "simp/page-b1";	 break;
-		case 5:  filename = "simp/page-b2";	 break;
-		case 6:  filename = "simp/page-b3";	 break;
-		case 7:  filename = "simp/page-c1";	 break;
-		case 8:  filename = "simp/page-c2";	 break;
-		case 9:  filename = "simp/page-c3";	 break;
-		case 10: filename = "simp/page-d";	 break;
-		case 11: filename = "simp/page-e";	 break;
-		case 12: filename = "simp/page-f1";	 break;
-		case 13: filename = "simp/page-f2";	 break;
-		case 14: filename = "simp/page-g";	 break;
-		case 15: filename = "simp/page-h";	 break;
+		case 1:  filename = "page-a1";	break;
+		case 2:  filename = "page-a2";	break;
+		case 3:	 filename = "page-a3";	break;
+		case 4:  filename = "page-b1";	break;
+		case 5:  filename = "page-b2";	break;
+		case 6:  filename = "page-b3";	break;
+		case 7:  filename = "page-c1";	break;
+		case 8:  filename = "page-c2";	break;
+		case 9:  filename = "page-c3";	break;
+		case 10: filename = "page-d";	break;
+		case 11: filename = "page-e";	break;
+		case 12: filename = "page-f1";	break;
+		case 13: filename = "page-f2";	break;
+		case 14: filename = "page-g";	break;
+		case 15: filename = "page-h";	break;
+		case 16: filename = "page-i";	break;
 
 		default: defaultPage();
 				 return;

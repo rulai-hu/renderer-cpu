@@ -1,6 +1,5 @@
 package client.interpreter;
 
-import java.util.ArrayList;
 import java.util.Stack;
 
 import client.interpreter.LineBasedReader;
@@ -55,11 +54,6 @@ public class SimpInterpreter {
 	private boolean cameraLoaded = false;
 	private boolean cullBackfaces = true;
 	
-	public enum RenderStyle {
-		FILLED,
-		WIREFRAME;
-	}
-	
 	public SimpInterpreter(String filename, Drawable drawable, RendererTrio renderers) {
 		this._canvas = new ZCullingDrawable(drawable);
 		this.canvas = _canvas;
@@ -73,6 +67,8 @@ public class SimpInterpreter {
 		this.readerStack = new Stack<>();
 		this.CTM = Transformation.identity();
 		this.worldToCamera = Transformation.identity();
+		
+		this.shading.phong();
 	}
 	
 	public void interpret() {
@@ -222,7 +218,7 @@ public class SimpInterpreter {
 			.setSurfaceColor(defaultColor);
 		
 		polygon = transformToCameraSpace(polygon);
-
+		
 		if (cullBackfaces) {
 			Vector3 normal = Vector3.cross(polygon.get(0), polygon.get(1), polygon.get(2));
 			
@@ -252,19 +248,13 @@ public class SimpInterpreter {
 		
 		if (polygon.length() < 3) return;
 		
-		//System.out.println("Drawing:" + polygon);
-		
 		for (Polygon tri : polygon.triangulate()) {
 			// Don't draw polygons with zero area
 			Vector3 cross = Vector3.cross(tri.get(0), tri.get(1), tri.get(2));
-			//System.out.println("CrossCheck:" + cross);
+
 			if (cross.x == 0 && cross.y == 0 && cross.z == 0) {
 				continue;
 			}
-			
-			//System.out.println("AFTER TRIANGULATE cs:" + tri.get(0).getCameraSpacePoint());
-			//System.out.println("AFTER TRIANGULATE cs:" + tri.get(1).getCameraSpacePoint());
-			//System.out.println("AFTER TRIANGULATE cs:" + tri.get(2).getCameraSpacePoint());
 			
 			polygonRenderer.drawPolygon(viewport.apply(tri), canvas, shading.getPixelShader());
 		}
