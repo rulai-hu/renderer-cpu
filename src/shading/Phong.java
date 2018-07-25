@@ -12,6 +12,8 @@ public class Phong {
 		
 		Vector3 view = new Vector3(-surfacePoint.getX(), -surfacePoint.getY(), -surfacePoint.getZ()).normalize();
 		
+		view.normalize();
+		
 		Vector3 L;
 		Vector3 R;
 		Vector3 reflectedColor;
@@ -19,18 +21,19 @@ public class Phong {
 		normal = new Vector3(normal).normalize();
 		double specularTerm;
 		double normalDotL;
-		
+
 		for (PointLight light : data.getPointLights()) {
 			L = surfacePoint.displacement(light.pos).normalize();
+			
 			normalDotL = normal.dot(L);
+			
 			if (normalDotL < 0) {
 				continue;
 			}
+
 			R = new Vector3(normal).multiply(normalDotL * 2).subtract(L).normalize();
-			//R = new Vector3(L).subtract(new Vector3(normal).multiply(normalDotL * 2)).normalize();
-			diffuseTerm = new Vector3(surfaceColor).multiply(Math.max(0, normal.dot(L)));
-			//specularTerm = 0;
-			specularTerm = ks * Math.pow(R.dot(view), s);
+			diffuseTerm = new Vector3(surfaceColor).multiply(Math.max(0, normalDotL));
+			specularTerm = ks * Math.pow(Math.max(0, R.dot(view)), s);
 			reflectedColor = new Vector3(surfaceColor).hadamard(diffuseTerm).addScalar(specularTerm);
 			
 			result.add(light.getIntensity().multiply(light.computeAttenuation(surfacePoint)).hadamard(reflectedColor));

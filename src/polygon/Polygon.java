@@ -178,10 +178,10 @@ public class Polygon extends Chain {
 	}
 
 	public Vector3 getFaceNormal() {
-		Vector3 res = Vector3.cross(get(0), get(1), get(2));
-		
+		Vector3 res = Vector3.cross(get(0).getCameraSpacePoint(), get(1).getCameraSpacePoint(), get(2).getCameraSpacePoint());
+
 		if (res.x == 0 && res.y == 0 && res.z == 0) {
-			System.out.println("BAD:" + this);
+			System.err.println("BAD:" + this);
 		}
 		
 		return res.normalize();

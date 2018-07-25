@@ -63,7 +63,7 @@ public class Vector3 {
 		return "[" + x + ", " + y + ", " + z + "]";
 	}
 	
-	public static Vector3 cross(Vertex3D v1, Vertex3D v2, Vertex3D v3) {
+	public static Vector3 cross(Point3DH v1, Point3DH v2, Point3DH v3) {
 		double x1 = v1.getX();
 		double y1 = v1.getY();
 		double z1 = v1.getZ();
@@ -81,6 +81,10 @@ public class Vector3 {
 			(z2 - z1) * (x3 - x1) - (z3 - z1) * (x2 - x1),
 			(x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1)
 		);
+	}
+	
+	public static Vector3 cross(Vertex3D v1, Vertex3D v2, Vertex3D v3) {
+		return cross(v1.getPoint3D(), v2.getPoint3D(), v3.getPoint3D());
 	}
 
 	public double dot(Vector3 v) {

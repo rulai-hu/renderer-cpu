@@ -38,8 +38,8 @@ public class ShadingStyle {
 	}
 	
 	public void ambientOnly() {
-		currentFaceShader = new AmbientShader(globalData);
-		currentVertexShader = new NullVertexShader();
+		currentFaceShader = new NullFaceShader();
+		currentVertexShader = new AmbientShader(globalData);
 		currentPixelShader = new FlatPixelShader();
 	}
 	

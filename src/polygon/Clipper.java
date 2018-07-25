@@ -1,6 +1,7 @@
 package polygon;
 
 import geometry.Point3DH;
+import geometry.Vector3;
 import geometry.Vertex3D;
 import windowing.graphics.Color;
 
@@ -71,6 +72,9 @@ public class Clipper {
 		Vertex3D nextVertex;
 		Vertex3D newVertex;
 		
+		Vector3 newCSNormal;
+		Point3DH newCSPoint;
+		
 		double currentDot = dot(currentVertex.getPoint3D(), normal);
 		double nextDot;
 		
@@ -106,7 +110,19 @@ public class Clipper {
 				if (perspCorrect) z = 1 / z;
 
 				newVertex = new Vertex3D(x, y, z, nextVertex.getColor());
-
+				
+				newCSPoint = currentVertex.getCameraSpacePoint()
+						.add(nextVertex.getCameraSpacePoint().subtract(currentVertex.getCameraSpacePoint()).scale(interp));
+				
+				if (currentVertex.hasNormal()) {
+					newCSNormal = currentVertex.getCameraSpaceNormal()
+							.add(nextVertex.getCameraSpaceNormal().subtract(currentVertex.getCameraSpaceNormal().multiply(interp)))
+							.normalize();
+				} else {
+					newCSNormal = null;
+				}
+			
+				newVertex.setCameraSpaceData(newCSPoint, newCSNormal);
 				result.add(newVertex);
 			}
 			

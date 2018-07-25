@@ -3,7 +3,7 @@ package geometry;
 import windowing.graphics.Color;
 
 public class Vertex3D implements Vertex {
-	private final static Point3DH NO_SAVE = new Point3DH(0, 0, 0, 0);
+	public final static Point3DH NO_SAVE = new Point3DH(0, 0, 0, 0);
 	private final static Vector3 NO_NORMAL = new Vector3(0, 0, 0);
 	protected Point3DH point;
 	private Vector3 normal = NO_NORMAL;
@@ -76,7 +76,7 @@ public class Vertex3D implements Vertex {
 				.setCameraSpaceData(cameraSpacePt, cameraSpaceNormal);
 	}
 	
-	private Vertex3D setCameraSpaceData(Point3DH pt, Vector3 v) {
+	public Vertex3D setCameraSpaceData(Point3DH pt, Vector3 v) {
 		cameraSpacePt = new Point3DH(pt.getX(), pt.getY(), pt.getZ(), pt.getW());
 		if (v != null) {
 			cameraSpaceNormal = new Vector3(v);
@@ -84,7 +84,7 @@ public class Vertex3D implements Vertex {
 		
 		return this;
 	}
-
+	
 	public String toString() {
 		return "(" + getX() + ", " + getY() + ", " + getZ() + ", " + getColor().toIntString() + ")";
 	}

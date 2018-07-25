@@ -1,10 +1,11 @@
 package shading;
 
+import geometry.Vertex3D;
 import polygon.Polygon;
 import shading.ShadingStyle.LightingData;
 import windowing.graphics.Color;
 
-public class AmbientShader implements FaceShader {
+public class AmbientShader implements VertexShader {
 	private LightingData data;
 	
 	public AmbientShader(LightingData data) {
@@ -12,10 +13,9 @@ public class AmbientShader implements FaceShader {
 	}
 
 	@Override
-	public Polygon shade(Polygon polygon) {
-		Color color = polygon.get(0).getColor().multiply(data.getAmbientLight());
-		polygon.setSurfaceColor(color);
+	public Vertex3D shade(Polygon polygon, Vertex3D vertex) {
+		Color color = vertex.getColor().multiply(data.getAmbientLight());
 		
-		return polygon;
+		return vertex.replaceColor(color);
 	}
 }

@@ -1,5 +1,6 @@
 package client.interpreter;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 import client.interpreter.LineBasedReader;
@@ -145,7 +146,7 @@ public class SimpInterpreter {
 		
 		Point3DH pos = CTM.apply(new Point3DH(0, 0, 0, 1));
 
-		System.out.println("Placing point light at " + pos + " with color: " + r + ", " + g + ", " + b);
+		//System.out.println("Placing point light at " + pos + " with color: " + r + ", " + g + ", " + b);
 		
 		shading.placePointLight(pos, new Color(r, g, b), A, B);
 	}
@@ -158,7 +159,7 @@ public class SimpInterpreter {
 			defaultShininess = cleanNumber(tokens[5]);
 		}
 		
-		System.out.println("DefaultColor=" + defaultColor + " ks=" + defaultSpecularCoefficient + " s=" + defaultShininess);
+		//System.out.println("DefaultColor=" + defaultColor + " ks=" + defaultSpecularCoefficient + " s=" + defaultShininess);
 	}
 
 	private void interpretDepth(String[] tokens) {
@@ -251,14 +252,20 @@ public class SimpInterpreter {
 		
 		if (polygon.length() < 3) return;
 		
-		// Don't draw polygons with zero area
-		Vector3 cross = Vector3.cross(polygon.get(0), polygon.get(1), polygon.get(2));
+		//System.out.println("Drawing:" + polygon);
 		
-		if (cross.x == 0 && cross.y == 0 && cross.z == 0) {
-			return;
-		}
-
 		for (Polygon tri : polygon.triangulate()) {
+			// Don't draw polygons with zero area
+			Vector3 cross = Vector3.cross(tri.get(0), tri.get(1), tri.get(2));
+			//System.out.println("CrossCheck:" + cross);
+			if (cross.x == 0 && cross.y == 0 && cross.z == 0) {
+				continue;
+			}
+			
+			//System.out.println("AFTER TRIANGULATE cs:" + tri.get(0).getCameraSpacePoint());
+			//System.out.println("AFTER TRIANGULATE cs:" + tri.get(1).getCameraSpacePoint());
+			//System.out.println("AFTER TRIANGULATE cs:" + tri.get(2).getCameraSpacePoint());
+			
 			polygonRenderer.drawPolygon(viewport.apply(tri), canvas, shading.getPixelShader());
 		}
 	}
@@ -387,7 +394,7 @@ public class SimpInterpreter {
 	}
 	
 	private void wire() {
-		cullBackfaces = true;
+		cullBackfaces = false;
 		polygonRenderer = wireframeRenderer;
 	}
 	

@@ -1,5 +1,6 @@
 package polygon;
 
+import geometry.Vector3;
 import geometry.Vertex3D;
 import shading.PixelShader;
 import windowing.drawable.Drawable;
@@ -65,6 +66,8 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 		double z2 = 1 / v2.getZ();
 		double z3 = 1 / v3.getZ();
 		
+		Color color;
+		
 		for (int currY = maxY; currY > minY; --currY) {
 			if (currY == midpointY) {
 				if (longest == left) {
@@ -96,7 +99,7 @@ public class FilledPolygonRenderer implements PolygonRenderer {
 				
 				z = 1 / (w1 * z1 + w2 * z2 + w3 * z3);
 
-				Color color = pixelShader.shade(ordered, z, w1, w2, w3);
+				color = pixelShader.shade(ordered, z, w1, w2, w3);
 				
 				drawable.setPixel(i, currY, z, color.asARGB());
 			}
