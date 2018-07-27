@@ -12,8 +12,6 @@ public class Phong {
 		
 		Vector3 view = new Vector3(-surfacePoint.getX(), -surfacePoint.getY(), -surfacePoint.getZ()).normalize();
 		
-		view.normalize();
-		
 		Vector3 L;
 		Vector3 R;
 		Vector3 reflectedColor;
